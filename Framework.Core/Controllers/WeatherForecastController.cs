@@ -4,11 +4,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using Framework.Core.Common;
 using Framework.Core.IServices;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
 namespace Framework.Core.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("[controller]")]
     public class WeatherForecastController : ControllerBase

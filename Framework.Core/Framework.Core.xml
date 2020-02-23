@@ -4,5 +4,30 @@
         <name>Framework.Core</name>
     </assembly>
     <members>
+        <member name="P:Framework.Core.JwtSetting.Issuer">
+            <summary>
+            颁发者
+            </summary>
+        </member>
+        <member name="P:Framework.Core.JwtSetting.Audience">
+            <summary>
+            接收者
+            </summary>
+        </member>
+        <member name="P:Framework.Core.JwtSetting.SecurityKey">
+            <summary>
+            令牌密码
+            </summary>
+        </member>
+        <member name="P:Framework.Core.ServerJwtSetting.ExpireSeconds">
+            <summary>
+             过期时间
+            </summary>
+        </member>
+        <member name="P:Framework.Core.ServerJwtSetting.Credentials">
+            <summary>
+            签名 Microsoft.AspNetCore.Authentication.JwtBearer
+            </summary>
+        </member>
     </members>
 </doc>
