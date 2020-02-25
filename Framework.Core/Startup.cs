@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using Autofac;
@@ -9,6 +10,7 @@ using Autofac.Extras.DynamicProxy;
 using Framework.Core.Common;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -50,8 +52,31 @@ namespace Framework.Core
                 IsAutoCloseConnection = true,//默认false, 时候知道关闭数据库连接, 设置为true无需使用using或者Close操作
                 InitKeyType = InitKeyType.SystemTable //默认SystemTable, 字段信息读取, 如：该属性是不是主键，标识列等等信息
             }));
-            var jwtSetting = new JwtSetting();
-            Configuration.Bind("JwtSetting", jwtSetting);
+            services.AddAutoMapperSetup();
+            var jwtSetting = ServerJwtSetting.GetJwtSetting();
+
+            // 角色与接口的权限要求参数
+            var permissionRequirement = new PermissionRequirement(
+                "/api/error",// 拒绝授权的跳转地址（目前无用）
+                new List<PermissionItem>(),
+                ClaimTypes.Role,//基于角色的授权
+                jwtSetting.Issuer,//发行人
+                jwtSetting.Audience,//听众
+                jwtSetting.Credentials,//签名凭据
+                expiration: TimeSpan.FromSeconds(60 * 60)//接口的过期时间
+                );
+
+
+            // 3、复杂的策略授权
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy(Permissions.Name,
+                         policy => policy.Requirements.Add(permissionRequirement));
+            });
+
+            // 注入权限处理器
+            services.AddScoped<IAuthorizationHandler, PermissionHandler>();
+            services.AddSingleton(permissionRequirement);
 
             services.AddAuthentication(o => {
                     o.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -62,37 +87,6 @@ namespace Framework.Core
                {
                    options.Events = new JwtBearerEvents()
                    {
-                       //////在第一次接收到协议消息时
-                       //OnMessageReceived = context =>
-                       //{
-                       //    context.Token = context.Request.Query["access_token"];
-                       //    return Task.CompletedTask;
-                       //},
-                       ////未授权时
-                       //OnChallenge = context =>
-                       //{
-                       //    context.Response.Redirect("https://cn.bing.com/");
-                       //    //return new JsonResult((Success: false, Message: "用户名或密码不正确！"));
-                       //    return Task.CompletedTask;
-                       //},
-                       ////如果授权失败并导致禁止响应时
-                       //OnForbidden = context =>
-                       //{
-                       //    context.Response.WriteAsync("如果授权失败并导致禁止响应");
-                       //    return Task.CompletedTask;
-                       //},
-                       ////认证失败
-                       //OnAuthenticationFailed = context =>
-                       //{
-                       //    context.Response.WriteAsync("在请求处理期间抛出异常");
-                       //    return Task.CompletedTask;
-                       //},
-                       ////在Token验证通过后调用
-                       //OnTokenValidated = context =>
-                       //{
-                       //    context.Response.WriteAsync("在验证通过后调用");
-                       //    return Task.CompletedTask;
-                       //}
                        OnAuthenticationFailed = context =>
                        {
                            // 如果过期，则把<是否过期>添加到，返回头信息中
@@ -132,13 +126,13 @@ namespace Framework.Core
                 // 必须是 oauth2
                 option.AddSecurityDefinition("oauth2", new OpenApiSecurityScheme
                 {
-                    Description = "JWT授权(数据将在请求头中进行传输) 直接在下框中输入Bearer {token}（注意两者之间是一个空格）\"",
+                    Description = "JWT授权在下框中输入 Bearer Token值（注意两者之间是一个空格）",
                     Name = "Authorization",//jwt默认的参数名称
                     In = ParameterLocation.Header,//jwt默认存放Authorization信息的位置(请求头中)
                     Type = SecuritySchemeType.ApiKey
                 });
                 //// 配置apixml名称
-                //option.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, $"{typeof(Startup).Assembly.GetName().Name}.xml"), true);
+                option.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, $"{typeof(Startup).Assembly.GetName().Name}.xml"), true);
             });
             services.AddControllers();
         }

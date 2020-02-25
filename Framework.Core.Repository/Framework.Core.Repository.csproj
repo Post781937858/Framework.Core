@@ -9,7 +9,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Framework.Core.Common\Framework.Core.Common.csproj" />
     <ProjectReference Include="..\Framework.Core.IRepository\Framework.Core.IRepository.csproj" />
     <ProjectReference Include="..\Framework.Core.Models\Framework.Core.Models.csproj" />
   </ItemGroup>

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
@@ -15,10 +15,6 @@
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="StackExchange.Redis" Version="2.0.601" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="5.6.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Framework.Core.IRepository\Framework.Core.IRepository.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,5 +1,4 @@
-﻿using Framework.Core.Common;
-using Framework.Core.IRepository.IUnitOfWork;
+﻿using Framework.Core.IRepository.IUnitOfWork;
 using Framework.Core.IRepository.IUnitOfWork.IBase;
 using SqlSugar;
 using System;

@@ -4,6 +4,162 @@
         <name>Framework.Core</name>
     </assembly>
     <members>
+        <member name="T:Framework.Core.FrameworkCacheAOP">
+            <summary>
+            面向切面的缓存使用
+            </summary>
+        </member>
+        <member name="M:Framework.Core.FrameworkCacheAOPbase.Intercept(Castle.DynamicProxy.IInvocation)">
+            <summary>
+            AOP的拦截方法
+            </summary>
+            <param name="invocation"></param>
+        </member>
+        <member name="M:Framework.Core.FrameworkCacheAOPbase.CustomCacheKey(Castle.DynamicProxy.IInvocation)">
+            <summary>
+            自定义缓存的key
+            </summary>
+            <param name="invocation"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Framework.Core.FrameworkCacheAOPbase.GetArgumentValue(System.Object)">
+            <summary>
+            object 转 string
+            </summary>
+            <param name="arg"></param>
+            <returns></returns>
+        </member>
+        <member name="T:Framework.Core.FrameworkLogAOP">
+            <summary>
+            拦截器BlogLogAOP 继承IInterceptor接口
+            </summary>
+        </member>
+        <member name="M:Framework.Core.FrameworkLogAOP.Intercept(Castle.DynamicProxy.IInvocation)">
+            <summary>
+            实例化IInterceptor唯一方法 
+            </summary>
+            <param name="invocation">包含被拦截方法的信息</param>
+        </member>
+        <member name="M:Framework.Core.FrameworkTranAOP.Intercept(Castle.DynamicProxy.IInvocation)">
+            <summary>
+            实例化IInterceptor唯一方法 
+            </summary>
+            <param name="invocation">包含被拦截方法的信息</param>
+        </member>
+        <member name="T:Framework.Core.PermissionHandler">
+            <summary>
+            权限授权处理器
+            </summary>
+        </member>
+        <member name="P:Framework.Core.PermissionHandler.Schemes">
+            <summary>
+            验证方案提供对象
+            </summary>
+        </member>
+        <member name="M:Framework.Core.PermissionHandler.#ctor(Microsoft.AspNetCore.Authentication.IAuthenticationSchemeProvider,Microsoft.AspNetCore.Http.IHttpContextAccessor)">
+            <summary>
+            构造函数注入
+            </summary>
+            <param name="schemes"></param>
+            <param name="accessor"></param>
+        </member>
+        <member name="T:Framework.Core.PermissionItem">
+            <summary>
+            用户或角色或其他凭据实体,就像是订单详情一样
+            之前的名字是 Permission
+            </summary>
+        </member>
+        <member name="P:Framework.Core.PermissionItem.Role">
+            <summary>
+            用户或角色或其他凭据名称
+            </summary>
+        </member>
+        <member name="P:Framework.Core.PermissionItem.Url">
+            <summary>
+            请求Url
+            </summary>
+        </member>
+        <member name="T:Framework.Core.Permissions">
+            <summary>
+            权限变量配置
+            </summary>
+        </member>
+        <member name="T:Framework.Core.PermissionRequirement">
+            <summary>
+            必要参数类，类似一个订单信息
+            继承 IAuthorizationRequirement，用于设计自定义权限处理器PermissionHandler
+            因为AuthorizationHandler 中的泛型参数 TRequirement 必须继承 IAuthorizationRequirement
+            </summary>
+        </member>
+        <member name="P:Framework.Core.PermissionRequirement.Permissions">
+            <summary>
+            用户权限集合，一个订单包含了很多详情，
+            同理，一个网站的认证发行中，也有很多权限详情(这里是Role和URL的关系)
+            </summary>
+        </member>
+        <member name="P:Framework.Core.PermissionRequirement.DeniedAction">
+            <summary>
+            无权限action
+            </summary>
+        </member>
+        <member name="P:Framework.Core.PermissionRequirement.ClaimType">
+            <summary>
+            认证授权类型
+            </summary>
+        </member>
+        <member name="P:Framework.Core.PermissionRequirement.LoginPath">
+            <summary>
+            请求路径
+            </summary>
+        </member>
+        <member name="P:Framework.Core.PermissionRequirement.Issuer">
+            <summary>
+            发行人
+            </summary>
+        </member>
+        <member name="P:Framework.Core.PermissionRequirement.Audience">
+            <summary>
+            订阅人
+            </summary>
+        </member>
+        <member name="P:Framework.Core.PermissionRequirement.Expiration">
+            <summary>
+            过期时间
+            </summary>
+        </member>
+        <member name="P:Framework.Core.PermissionRequirement.SigningCredentials">
+            <summary>
+            签名验证
+            </summary>
+        </member>
+        <member name="M:Framework.Core.PermissionRequirement.#ctor(System.String,System.Collections.Generic.List{Framework.Core.PermissionItem},System.String,System.String,System.String,Microsoft.IdentityModel.Tokens.SigningCredentials,System.TimeSpan)">
+            <summary>
+            构造
+            </summary>
+            <param name="deniedAction">拒约请求的url</param>
+            <param name="permissions">权限集合</param>
+            <param name="claimType">声明类型</param>
+            <param name="issuer">发行人</param>
+            <param name="audience">订阅人</param>
+            <param name="signingCredentials">签名验证实体</param>
+            <param name="expiration">过期时间</param>
+        </member>
+        <member name="M:Framework.Core.Controllers.LoginController.GetToken">
+            <summary>
+            获取Token 无权限
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:Framework.Core.AutoMapperConfig">
+            <summary>
+            静态全局 AutoMapper 配置文件
+            </summary>
+        </member>
+        <member name="T:Framework.Core.ApiResponseHandler">
+            <summary>
+            自定义api响应格式处理器
+            </summary>
+        </member>
         <member name="P:Framework.Core.JwtSetting.Issuer">
             <summary>
             颁发者
@@ -28,6 +184,28 @@
             <summary>
             签名 Microsoft.AspNetCore.Authentication.JwtBearer
             </summary>
+        </member>
+        <member name="T:Framework.Core.TokenModelJwt">
+            <summary>
+            令牌
+            </summary>
+        </member>
+        <member name="P:Framework.Core.TokenModelJwt.Uid">
+            <summary>
+            Id
+            </summary>
+        </member>
+        <member name="P:Framework.Core.TokenModelJwt.Role">
+            <summary>
+            角色
+            </summary>
+        </member>
+        <member name="M:Framework.Core.JWTTokenService.SerializeJwt(System.String)">
+            <summary>
+            解析
+            </summary>
+            <param name="jwtStr"></param>
+            <returns></returns>
         </member>
     </members>
 </doc>

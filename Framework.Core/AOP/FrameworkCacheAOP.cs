@@ -1,9 +1,10 @@
 ﻿using Castle.DynamicProxy;
+using Framework.Core.Common;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Framework.Core.Common
+namespace Framework.Core
 {
     /// <summary>
     /// 面向切面的缓存使用

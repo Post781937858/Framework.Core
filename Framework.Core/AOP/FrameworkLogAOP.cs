@@ -10,7 +10,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Framework.Core.Common
+namespace Framework.Core
 {
     /// <summary>
     /// 拦截器BlogLogAOP 继承IInterceptor接口

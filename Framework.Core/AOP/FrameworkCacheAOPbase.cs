@@ -1,10 +1,11 @@
 ﻿using Castle.DynamicProxy;
+using Framework.Core.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
-namespace Framework.Core.Common
+namespace Framework.Core
 {
     public abstract class FrameworkCacheAOPbase : IInterceptor
     {

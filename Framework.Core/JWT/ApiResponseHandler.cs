@@ -9,10 +9,14 @@ using System.Threading.Tasks;
 
 namespace Framework.Core
 {
+    /// <summary>
+    /// 自定义api响应格式处理器
+    /// </summary>
     public class ApiResponseHandler : AuthenticationHandler<AuthenticationSchemeOptions>
     {
         public ApiResponseHandler(IOptionsMonitor<AuthenticationSchemeOptions> options, ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock) : base(options, logger, encoder, clock)
         {
+
         }
 
         protected override Task<AuthenticateResult> HandleAuthenticateAsync()

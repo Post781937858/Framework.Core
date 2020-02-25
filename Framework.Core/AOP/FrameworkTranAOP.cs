@@ -1,4 +1,5 @@
 ﻿using Castle.DynamicProxy;
+using Framework.Core.Common;
 using Framework.Core.IRepository.IUnitOfWork;
 using System;
 using System.Collections.Generic;
@@ -7,7 +8,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Framework.Core.Common
+namespace Framework.Core
 {
     public class FrameworkTranAOP : IInterceptor
     {

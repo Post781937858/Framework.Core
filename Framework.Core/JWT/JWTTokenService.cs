@@ -1,40 +1,24 @@
 ﻿using Framework.Core.Models;
 using IdentityModel;
+using SqlSugar;
 using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
 namespace Framework.Core
 {
-    public interface IJWTTokenService
+    public class JWTTokenService
     {
-        string GetToken(Userinfo user);
-    }
-
-    public class JWTTokenService : IJWTTokenService
-    {
-        private readonly ServerJwtSetting _jwtSetting;
-
-        public JWTTokenService()
+        public static string GetToken(TokenModelJwt user)
         {
-            _jwtSetting = new ServerJwtSetting
-            {
-                SecurityKey = "d0ecd23c-dvdb-5005-a2ka-0fea210c858a", // 密钥
-                Issuer = "jwtIssuertest", // 颁发者
-                Audience = "jwtAudiencetest", // 接收者
-                ExpireSeconds = 60 * 60 * 24 * 7 // 7t 过期时间
-            };
-        }
-
-        public string GetToken(Userinfo user)
-        {
+            var _jwtSetting = ServerJwtSetting.GetJwtSetting();
             // 创建用户身份标识
             var claims = new Claim[]
             {
                 new Claim(JwtClaimTypes.JwtId, Guid.NewGuid().ToString()),
-                new Claim(JwtClaimTypes.Id, user.id.ToString(), ClaimValueTypes.Integer32),
+                new Claim(JwtClaimTypes.Id, user.Uid.ToString(), ClaimValueTypes.Integer32),
                 new Claim(JwtClaimTypes.Name, user.Name, ClaimValueTypes.String),
-                new Claim(JwtClaimTypes.Scope, user.Power_ID.ToString(),ClaimValueTypes.Integer32)
+                new Claim(JwtClaimTypes.Role, user.Role?.ToString(),ClaimValueTypes.Integer32)
             };
 
             // 创建令牌
@@ -50,6 +34,36 @@ namespace Framework.Core
             string jwtToken = new JwtSecurityTokenHandler().WriteToken(token);
 
             return jwtToken;
+        }
+
+        /// <summary>
+        /// 解析
+        /// </summary>
+        /// <param name="jwtStr"></param>
+        /// <returns></returns>
+        public static TokenModelJwt SerializeJwt(string jwtStr)
+        {
+            var jwtHandler = new JwtSecurityTokenHandler();
+            JwtSecurityToken jwtToken = jwtHandler.ReadJwtToken(jwtStr);
+            object role;
+            object name;
+            try
+            {
+                jwtToken.Payload.TryGetValue(ClaimTypes.Role, out role);
+                jwtToken.Payload.TryGetValue(ClaimTypes.Name, out name);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+            var tm = new TokenModelJwt
+            {
+                Uid = (jwtToken.Id).ObjToInt(),
+                Name= name.ObjToString(),
+                Role = role != null ? role.ObjToString() : "",
+            };
+            return tm;
         }
     }
 }

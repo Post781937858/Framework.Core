@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Framework.Core.Controllers
 {
-    [Authorize]
+    [Authorize(Permissions.Name)]
     [Route("api/[controller]")]
     [ApiController]
     public class DefaultController : ControllerBase
