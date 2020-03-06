@@ -3,11 +3,11 @@ using Framework.Core.Models;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Framework.Core.IRepository
 {
-    public interface IOrderTaskRepository : IBaseRepository<OrderTask>
-    {
-
+    public interface IUserRepository : IBaseRepository<User>
+    { 
     }
 }

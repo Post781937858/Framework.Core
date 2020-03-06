@@ -17,7 +17,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using SqlSugar;
@@ -27,9 +29,10 @@ namespace Framework.Core
 {
     public class Startup
     {
+
         public Startup(IConfiguration configuration)
         {
-            Configuration = configuration;
+            Configuration = configuration; 
         }
 
         public IConfiguration Configuration { get; }
@@ -39,6 +42,7 @@ namespace Framework.Core
         {
             services.AddSingleton(new Appsettings(Configuration));
             services.AddScoped<ICache, MemoryCaching>();
+            services.AddScoped<IUser, AspNetUser>();
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddSingleton<IMemoryCache>(factory =>
             {
@@ -52,6 +56,7 @@ namespace Framework.Core
                 IsAutoCloseConnection = true,//默认false, 时候知道关闭数据库连接, 设置为true无需使用using或者Close操作
                 InitKeyType = InitKeyType.SystemTable //默认SystemTable, 字段信息读取, 如：该属性是不是主键，标识列等等信息
             }));
+
             services.AddAutoMapperSetup();
             var jwtSetting = ServerJwtSetting.GetJwtSetting();
 
@@ -78,11 +83,12 @@ namespace Framework.Core
             services.AddScoped<IAuthorizationHandler, PermissionHandler>();
             services.AddSingleton(permissionRequirement);
 
-            services.AddAuthentication(o => {
-                    o.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-                    o.DefaultChallengeScheme = nameof(ApiResponseHandler);
-                    o.DefaultForbidScheme = nameof(ApiResponseHandler);
-                })
+            services.AddAuthentication(o =>
+            {
+                o.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+                o.DefaultChallengeScheme = nameof(ApiResponseHandler);
+                o.DefaultForbidScheme = nameof(ApiResponseHandler);
+            })
                .AddJwtBearer(options =>
                {
                    options.Events = new JwtBearerEvents()
@@ -134,7 +140,11 @@ namespace Framework.Core
                 //// 配置apixml名称
                 option.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, $"{typeof(Startup).Assembly.GetName().Name}.xml"), true);
             });
-            services.AddControllers();
+            DBClientManage.SeedAsync().Wait();
+            services.AddControllers().AddJsonOptions(configure =>
+            {
+                configure.JsonSerializerOptions.Converters.Add(new DatetimeJsonConverter());
+            });
         }
 
 
@@ -180,7 +190,13 @@ namespace Framework.Core
             {
                 app.UseDeveloperExceptionPage();
             }
-            app.UseHttpsRedirection();
+
+
+            //app.UseHttpsRedirection();
+
+            app.UseCors(builder => builder.WithOrigins(Appsettings.app(new string[] { "Startup", "Cors", "IPs" }).Split(','))
+            .AllowAnyHeader()
+            .AllowAnyMethod()); //跨域
 
             app.UseSwagger();
             app.UseSwaggerUI(option =>
@@ -191,6 +207,15 @@ namespace Framework.Core
                 option.DocumentTitle = "Framework.Core API";
             });
 
+            //开启静态文件处理
+            app.UseStaticFiles();
+            var filePath = Path.Combine(env.ContentRootPath, "images");
+            if (!Directory.Exists(filePath)) Directory.CreateDirectory(filePath);
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                RequestPath = "/images",
+                FileProvider = new PhysicalFileProvider(Path.Combine(env.ContentRootPath, "images"))
+            });
 
             app.UseRouting();
             // 先开启认证

@@ -3,14 +3,10 @@ using Framework.Core.Models;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Framework.Core.IServices
 {
-    public interface IOrderTaskServices: IBaseServices<OrderTask>
+    public interface IUserServices : IBaseServices<User>
     {
-        Task<List<OrderTask>> GetOrder();
-
-        void TaskOrder();
     }
 }

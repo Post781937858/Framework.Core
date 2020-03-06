@@ -2,10 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Framework.Core.IRepository;
 using Framework.Core.IServices;
 using Framework.Core.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace Framework.Core.Controllers
 {
@@ -13,25 +16,25 @@ namespace Framework.Core.Controllers
     [ApiController]
     public class LoginController : ControllerBase
     {
-        private readonly IOrderTaskServices services;
+        private readonly ILogger<LoginController> logger;
 
-        public LoginController(IOrderTaskServices services)
+        public LoginController(ILogger<LoginController>  logger)
         {
-            this.services = services;
+            this.logger = logger;
         }
 
         /// <summary>
         /// 获取Token 无权限
         /// </summary>
         /// <returns></returns>
+        //[AllowAnonymous]
         [HttpGet]
-        public OkObjectResult GetToken()
+        public MessageModel<dynamic> GetToken()
         {
-            return Ok(new
-            {
-                success = true,
-                data = new { token = JWTTokenService.GetToken(new TokenModelJwt() { Uid = 1, Name = "张三", Role = "admin" }) }
-            });
+            return new MessageModel<dynamic>(JWTTokenService.GetToken(new TokenModelJwt() { Uid = 1, Name = "张三", Role = "admin" }));
         }
+
+
+
     }
 }

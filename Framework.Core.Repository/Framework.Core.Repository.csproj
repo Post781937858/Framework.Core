@@ -5,10 +5,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="9.0.0" />
     <PackageReference Include="sqlSugarCore" Version="5.0.0.11" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Framework.Core.Common\Framework.Core.Common.csproj" />
     <ProjectReference Include="..\Framework.Core.IRepository\Framework.Core.IRepository.csproj" />
     <ProjectReference Include="..\Framework.Core.Models\Framework.Core.Models.csproj" />
   </ItemGroup>

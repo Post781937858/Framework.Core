@@ -8,9 +8,9 @@ using System.Text;
 
 namespace Framework.Core.Repository
 {
-    public class OrderTaskRepository : BaseRepository<OrderTask>, IOrderTaskRepository
+    public class UserRepository : BaseRepository<User>, IUserRepository
     {
-        public OrderTaskRepository(IUnitOfWork unitOfWork) : base(unitOfWork)
+        public UserRepository(IUnitOfWork unitOfWork) : base(unitOfWork)
         {
 
         }

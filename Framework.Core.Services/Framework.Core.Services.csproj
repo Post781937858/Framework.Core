@@ -5,6 +5,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="9.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Framework.Core.Common\Framework.Core.Common.csproj" />
     <ProjectReference Include="..\Framework.Core.IRepository\Framework.Core.IRepository.csproj" />
     <ProjectReference Include="..\Framework.Core.IServices\Framework.Core.IServices.csproj" />

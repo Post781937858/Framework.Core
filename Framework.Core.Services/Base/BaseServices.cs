@@ -1,5 +1,6 @@
 ﻿using Framework.Core.IRepository.IUnitOfWork.IBase;
 using Framework.Core.IServices.IBase;
+using Framework.Core.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
@@ -11,7 +12,7 @@ namespace Framework.Core.Services.Base
     public class BaseServices<TEntity> : IBaseServices<TEntity> where TEntity : class, new()
     {
         //public IBaseRepository<TEntity> baseDal = new BaseRepository<TEntity>();
-        public readonly IBaseRepository<TEntity> BaseDal;//通过在子类的构造函数中注入，这里是基类，不用构造函数
+        public readonly IBaseRepository<TEntity> BaseDal;
 
         public BaseServices(IBaseRepository<TEntity> repository)
         {
@@ -24,7 +25,7 @@ namespace Framework.Core.Services.Base
         }
         /// <summary>
         /// 功能描述:根据ID查询一条数据
-        /// 作　　者:AZLinli.Blog.Core
+        ///  
         /// </summary>
         /// <param name="objId">id（必须指定主键特性 [SugarColumn(IsPrimaryKey=true)]），如果是联合主键，请使用Where条件</param>
         /// <param name="blnUseCache">是否使用缓存</param>
@@ -36,7 +37,7 @@ namespace Framework.Core.Services.Base
 
         /// <summary>
         /// 功能描述:根据ID查询数据
-        /// 作　　者:AZLinli.Blog.Core
+        ///  
         /// </summary>
         /// <param name="lstIds">id列表（必须指定主键特性 [SugarColumn(IsPrimaryKey=true)]），如果是联合主键，请使用Where条件</param>
         /// <returns>数据实体列表</returns>
@@ -118,7 +119,7 @@ namespace Framework.Core.Services.Base
 
         /// <summary>
         /// 功能描述:查询所有数据
-        /// 作　　者:AZLinli.Blog.Core
+        ///  
         /// </summary>
         /// <returns>数据列表</returns>
         public async Task<List<TEntity>> Query()
@@ -128,7 +129,7 @@ namespace Framework.Core.Services.Base
 
         /// <summary>
         /// 功能描述:查询数据列表
-        /// 作　　者:AZLinli.Blog.Core
+        ///  
         /// </summary>
         /// <param name="strWhere">条件</param>
         /// <returns>数据列表</returns>
@@ -139,7 +140,7 @@ namespace Framework.Core.Services.Base
 
         /// <summary>
         /// 功能描述:查询数据列表
-        /// 作　　者:AZLinli.Blog.Core
+        ///  
         /// </summary>
         /// <param name="whereExpression">whereExpression</param>
         /// <returns>数据列表</returns>
@@ -149,7 +150,7 @@ namespace Framework.Core.Services.Base
         }
         /// <summary>
         /// 功能描述:查询一个列表
-        /// 作　　者:AZLinli.Blog.Core
+        ///  
         /// </summary>
         /// <param name="whereExpression">条件表达式</param>
         /// <param name="strOrderByFileds">排序字段，如name asc,age desc</param>
@@ -166,7 +167,7 @@ namespace Framework.Core.Services.Base
 
         /// <summary>
         /// 功能描述:查询一个列表
-        /// 作　　者:AZLinli.Blog.Core
+        ///  
         /// </summary>
         /// <param name="strWhere">条件</param>
         /// <param name="strOrderByFileds">排序字段，如name asc,age desc</param>
@@ -178,7 +179,7 @@ namespace Framework.Core.Services.Base
 
         /// <summary>
         /// 功能描述:查询前N条数据
-        /// 作　　者:AZLinli.Blog.Core
+        ///  
         /// </summary>
         /// <param name="whereExpression">条件表达式</param>
         /// <param name="intTop">前N条</param>
@@ -191,7 +192,7 @@ namespace Framework.Core.Services.Base
 
         /// <summary>
         /// 功能描述:查询前N条数据
-        /// 作　　者:AZLinli.Blog.Core
+        ///  
         /// </summary>
         /// <param name="strWhere">条件</param>
         /// <param name="intTop">前N条</param>
@@ -207,7 +208,7 @@ namespace Framework.Core.Services.Base
 
         /// <summary>
         /// 功能描述:分页查询
-        /// 作　　者:AZLinli.Blog.Core
+        ///  
         /// </summary>
         /// <param name="whereExpression">条件表达式</param>
         /// <param name="intPageIndex">页码（下标0）</param>
@@ -230,7 +231,7 @@ namespace Framework.Core.Services.Base
 
         /// <summary>
         /// 功能描述:分页查询
-        /// 作　　者:AZLinli.Blog.Core
+        ///  
         /// </summary>
         /// <param name="strWhere">条件</param>
         /// <param name="intPageIndex">页码（下标0）</param>
@@ -251,12 +252,12 @@ namespace Framework.Core.Services.Base
             strOrderByFileds);
         }
 
-        //public async Task<PageModel<TEntity>> QueryPage(Expression<Func<TEntity, bool>> whereExpression,
-        //int intPageIndex = 1, int intPageSize = 20, string strOrderByFileds = null)
-        //{
-        //    return await BaseDal.QueryPage(whereExpression,
-        // intPageIndex, intPageSize, strOrderByFileds);
-        //}
+        public async Task<PageModel<TEntity>> QueryPage(Expression<Func<TEntity, bool>> whereExpression,
+        int intPageIndex = 1, int intPageSize = 20, string strOrderByFileds = null)
+        {
+            return await BaseDal.QueryPage(whereExpression,
+         intPageIndex, intPageSize, strOrderByFileds);
+        }
 
         public async Task<List<TResult>> QueryMuch<T, T2, T3, TResult>(Expression<Func<T, T2, T3, object[]>> joinExpression, Expression<Func<T, T2, T3, TResult>> selectExpression, Expression<Func<T, T2, T3, bool>> whereLambda = null) where T : class, new()
         {

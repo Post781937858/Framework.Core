@@ -1,5 +1,6 @@
 ﻿using Framework.Core.IRepository.IUnitOfWork;
 using Framework.Core.IRepository.IUnitOfWork.IBase;
+using Framework.Core.Models;
 using SqlSugar;
 using System;
 using System.Collections.Generic;
@@ -14,7 +15,10 @@ namespace Framework.Core.Repository.Base
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly SqlSugarClient _db;
-
+        internal ISqlSugarClient Db
+        {
+            get { return _db; }
+        }
 
         public BaseRepository(IUnitOfWork unitOfWork)
         {
@@ -29,7 +33,7 @@ namespace Framework.Core.Repository.Base
         }
         /// <summary>
         /// 功能描述:根据ID查询一条数据
-        /// 作　　者:Blog.Core
+        ///  
         /// </summary>
         /// <param name="objId">id（必须指定主键特性 [SugarColumn(IsPrimaryKey=true)]），如果是联合主键，请使用Where条件</param>
         /// <param name="blnUseCache">是否使用缓存</param>
@@ -42,7 +46,7 @@ namespace Framework.Core.Repository.Base
 
         /// <summary>
         /// 功能描述:根据ID查询数据
-        /// 作　　者:Blog.Core
+        ///  
         /// </summary>
         /// <param name="lstIds">id列表（必须指定主键特性 [SugarColumn(IsPrimaryKey=true)]），如果是联合主键，请使用Where条件</param>
         /// <returns>数据实体列表</returns>
@@ -206,7 +210,7 @@ namespace Framework.Core.Repository.Base
 
         /// <summary>
         /// 功能描述:查询所有数据
-        /// 作　　者:Blog.Core
+        ///  
         /// </summary>
         /// <returns>数据列表</returns>
         public async Task<List<TEntity>> Query()
@@ -216,7 +220,7 @@ namespace Framework.Core.Repository.Base
 
         /// <summary>
         /// 功能描述:查询数据列表
-        /// 作　　者:Blog.Core
+        ///  
         /// </summary>
         /// <param name="strWhere">条件</param>
         /// <returns>数据列表</returns>
@@ -228,7 +232,7 @@ namespace Framework.Core.Repository.Base
 
         /// <summary>
         /// 功能描述:查询数据列表
-        /// 作　　者:Blog.Core
+        ///  
         /// </summary>
         /// <param name="whereExpression">whereExpression</param>
         /// <returns>数据列表</returns>
@@ -239,7 +243,7 @@ namespace Framework.Core.Repository.Base
 
         /// <summary>
         /// 功能描述:查询一个列表
-        /// 作　　者:Blog.Core
+        ///  
         /// </summary>
         /// <param name="whereExpression">条件表达式</param>
         /// <param name="strOrderByFileds">排序字段，如name asc,age desc</param>
@@ -264,7 +268,7 @@ namespace Framework.Core.Repository.Base
 
         /// <summary>
         /// 功能描述:查询一个列表
-        /// 作　　者:Blog.Core
+        ///  
         /// </summary>
         /// <param name="strWhere">条件</param>
         /// <param name="strOrderByFileds">排序字段，如name asc,age desc</param>
@@ -278,7 +282,7 @@ namespace Framework.Core.Repository.Base
 
         /// <summary>
         /// 功能描述:查询前N条数据
-        /// 作　　者:Blog.Core
+        ///  
         /// </summary>
         /// <param name="whereExpression">条件表达式</param>
         /// <param name="intTop">前N条</param>
@@ -295,7 +299,7 @@ namespace Framework.Core.Repository.Base
 
         /// <summary>
         /// 功能描述:查询前N条数据
-        /// 作　　者:Blog.Core
+        ///  
         /// </summary>
         /// <param name="strWhere">条件</param>
         /// <param name="intTop">前N条</param>
@@ -314,7 +318,7 @@ namespace Framework.Core.Repository.Base
 
         /// <summary>
         /// 功能描述:分页查询
-        /// 作　　者:Blog.Core
+        ///  
         /// </summary>
         /// <param name="whereExpression">条件表达式</param>
         /// <param name="intPageIndex">页码（下标0）</param>
@@ -334,7 +338,6 @@ namespace Framework.Core.Repository.Base
 
         /// <summary>
         /// 功能描述:分页查询
-        /// 作　　者:Blog.Core
         /// </summary>
         /// <param name="strWhere">条件</param>
         /// <param name="intPageIndex">页码（下标0）</param>
@@ -363,18 +366,18 @@ namespace Framework.Core.Repository.Base
         ///// <param name="intPageSize">页大小</param>
         ///// <param name="strOrderByFileds">排序字段，如name asc,age desc</param>
         ///// <returns></returns>
-        //public async Task<PageModel<TEntity>> QueryPage(Expression<Func<TEntity, bool>> whereExpression, int intPageIndex = 1, int intPageSize = 20, string strOrderByFileds = null)
-        //{
+        public async Task<PageModel<TEntity>> QueryPage(Expression<Func<TEntity, bool>> whereExpression, int intPageIndex = 1, int intPageSize = 20, string strOrderByFileds = null)
+        {
 
-        //    RefAsync<int> totalCount = 0;
-        //    var list = await _db.Queryable<TEntity>()
-        //     .OrderByIF(!string.IsNullOrEmpty(strOrderByFileds), strOrderByFileds)
-        //     .WhereIF(whereExpression != null, whereExpression)
-        //     .ToPageListAsync(intPageIndex, intPageSize, totalCount);
+            RefAsync<int> totalCount = 0;
+            var list = await _db.Queryable<TEntity>()
+             .OrderByIF(!string.IsNullOrEmpty(strOrderByFileds), strOrderByFileds)
+             .WhereIF(whereExpression != null, whereExpression)
+             .ToPageListAsync(intPageIndex, intPageSize, totalCount);
 
-        //    int pageCount = (Math.Ceiling(totalCount.ObjToDecimal() / intPageSize.ObjToDecimal())).ObjToInt();
-        //    return new PageModel<TEntity>() { dataCount = totalCount, pageCount = pageCount, page = intPageIndex, PageSize = intPageSize, data = list };
-        //}
+            int pageCount = (Math.Ceiling(totalCount.ObjToDecimal() / intPageSize.ObjToDecimal())).ObjToInt();
+            return new PageModel<TEntity>() { dataCount = totalCount, pageCount = pageCount, page = intPageIndex, PageSize = intPageSize, data = list };
+        }
 
 
         /// <summary> 

@@ -13,11 +13,8 @@ namespace Framework.Core
     {
         public AutoMapperProfile()
         {
-            var basePath = AppDomain.CurrentDomain.BaseDirectory;
-            var DllFile = Path.Combine(basePath, "Framework.Core.Models.dll");
-            var assemblys = Assembly.LoadFrom(DllFile);
-            assemblys.GetTypes()
-                .Where(i => i.GetInterfaces().Any(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IMapperTo<>)))
+            typeof(IMapperTo<>).Assembly.GetTypes()
+                 .Where(i => i.GetInterfaces().Any(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IMapperTo<>)))
                 .ToList().ForEach(item =>
                 {
                     item.GetInterfaces()
