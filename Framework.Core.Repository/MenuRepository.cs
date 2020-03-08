@@ -29,22 +29,34 @@ namespace Framework.Core.Repository
         }
 
         /// <summary>
+        /// 查询所有角色所拥有权限
+        /// </summary>
+        /// <param name="expression"></param>
+        /// <returns></returns>
+        public async Task<List<PermissionItemView>> PermissionItemViewsAsync(Expression<Func<PowerDetail, Menu, bool>> expression)
+        {
+            return await base.Db.Queryable<PowerDetail, Menu>((r, b) => new object[] { JoinType.Right, r.menuid == b.Id })
+                .WhereIF(expression != null, expression)
+                .Select((r, b) => new PermissionItemView() { Url = b.url, Role = r.PowerName, method = b.method,id=b.Id }).ToListAsync();
+        }
+
+        /// <summary>
         /// 查询所有菜单
         /// </summary>
         /// <returns></returns>
-        public async Task<List<MenuView>> GetMenuAllViews(Expression<Func<Menu, bool>> expression)
+        public async Task<List<MenuView>> GetMenuAllViews(Expression<Func<Menu, bool>> expression, Func<Menu, bool> expression1)
         {
             List<MenuView> menuViews = new List<MenuView>();
             if (!string.IsNullOrEmpty(_user.Role))
             {
                 var ListMenu = await base.Query(expression);
-                ListMenu.Where(p => (p.menutype == menuType.Menu && p.menuid == 999) || p.menutype == menuType.Button || p.menutype == menuType.Api)
+                ListMenu.Where(expression1)
                 .ToList().ForEach(p =>
                 {
                     MenuView item = mapper.Map<MenuView>(p);
                     menuViews.Add(item);
                 });
-                GetSubmenuMenuView(ref menuViews, ListMenu);
+                GetSubmenuMenuApiView(ref menuViews, ListMenu);
             }
             return menuViews;
         }
@@ -58,7 +70,7 @@ namespace Framework.Core.Repository
             List<MenuView> menuViews = new List<MenuView>();
             if (!string.IsNullOrEmpty(_user.Role))
             {
-                var ListMenu = await base.Db.Queryable<PowerDetail, Menu>((r, b) => new object[] { JoinType.Right, r.menuid == b.Id }).Where((r, b) => r.PowerName == _user.Role).Select((r, b) => b).ToListAsync();
+                var ListMenu = await base.Db.Queryable<PowerDetail, Menu>((r, b) => new object[] { JoinType.Right, r.menuid == b.Id }).Where((r, b) => r.PowerName == _user.Role && b.menutype == menuType.Menu).Select((r, b) => b).ToListAsync();
                 ListMenu.Where(p => p.menuid == 999 && p.menutype == menuType.Menu)
                 .ToList().ForEach(p =>
                 {
@@ -71,7 +83,7 @@ namespace Framework.Core.Repository
         }
 
         /// <summary>
-        /// 递归查询所有子菜单
+        /// 递归查询所有子菜单无菜单接口
         /// </summary>
         /// <param name="menuViews"></param>
         /// <param name="menus"></param>
@@ -90,6 +102,42 @@ namespace Framework.Core.Repository
                     });
                     p.submenu = ViewsSubmenu;
                     GetSubmenuMenuView(ref ViewsSubmenu, menus);
+                }
+            });
+        }
+
+        /// <summary>
+        /// 递归查询所有子菜单含菜单接口
+        /// </summary>
+        /// <param name="menuViews"></param>
+        /// <param name="menus"></param>
+        private void GetSubmenuMenuApiView(ref List<MenuView> menuViews, IEnumerable<Menu> menus)
+        {
+            menuViews.ForEach(p =>
+            {
+                List<MenuView> ViewsSubmenu = new List<MenuView>();
+                var ListMenus = menus.Where(s => s.menuid == p.Id && s.menutype == menuType.Menu);
+                if (ListMenus.Any())
+                {
+                    ListMenus.ToList().ForEach(i =>
+                    {
+                        MenuView item = mapper.Map<MenuView>(i);
+                        ViewsSubmenu.Add(item);
+                    });
+                    p.submenu = ViewsSubmenu;
+                    GetSubmenuMenuApiView(ref ViewsSubmenu, menus);
+                }
+                List<MenuView> ViewsSubmenuApi = new List<MenuView>();
+                var ListMenusAPI = menus.Where(s => s.menuid == p.Id && s.menutype != menuType.Menu);
+                if (ListMenusAPI.Any())
+                {
+                    ListMenusAPI.ToList().ForEach(i =>
+                    {
+                        MenuView item = mapper.Map<MenuView>(i);
+                        ViewsSubmenuApi.Add(item);
+                    });
+                    p.submenuApi = ViewsSubmenuApi;
+                    GetSubmenuMenuApiView(ref ViewsSubmenuApi, menus);
                 }
             });
         }

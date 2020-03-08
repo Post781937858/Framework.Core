@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Autofac;
 using Autofac.Extras.DynamicProxy;
 using Framework.Core.Common;
+using Framework.Core.Models.ViewModels;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -63,7 +64,7 @@ namespace Framework.Core
             // 角色与接口的权限要求参数
             var permissionRequirement = new PermissionRequirement(
                 "/api/error",// 拒绝授权的跳转地址（目前无用）
-                new List<PermissionItem>(),
+                new List<PermissionItemView>(),
                 ClaimTypes.Role,//基于角色的授权
                 jwtSetting.Issuer,//发行人
                 jwtSetting.Audience,//听众

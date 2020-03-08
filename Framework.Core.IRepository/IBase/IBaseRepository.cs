@@ -17,11 +17,15 @@ namespace Framework.Core.IRepository.IUnitOfWork.IBase
 
         Task<int> Add(TEntity model);
 
+         Task<int> Add(List<TEntity> listEntity);
+
         Task<bool> DeleteById(object id);
 
         Task<bool> Delete(TEntity model);
 
         Task<bool> DeleteByIds(object[] ids);
+
+        Task<bool> Delete(Expression<Func<TEntity, bool>> whereExpression);
 
         Task<bool> Update(TEntity model);
         Task<bool> Update(TEntity entity, string strWhere);

@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Authentication;
+﻿using Framework.Core.Common;
+using Framework.Core.IServices;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -23,15 +25,21 @@ namespace Framework.Core
         /// </summary>
         public IAuthenticationSchemeProvider Schemes { get; set; }
         private readonly IHttpContextAccessor _accessor;
+        private readonly IMenuServices menuServices;
+        private readonly IUser user;
 
         /// <summary>
         /// 构造函数注入
         /// </summary>
         /// <param name="schemes"></param>
         /// <param name="accessor"></param>
-        public PermissionHandler(IAuthenticationSchemeProvider schemes,  IHttpContextAccessor accessor)
+        /// <param name="menuServices"></param>
+        /// <param name="user"></param>
+        public PermissionHandler(IAuthenticationSchemeProvider schemes, IHttpContextAccessor accessor, IMenuServices menuServices, IUser user)
         {
             _accessor = accessor;
+            this.menuServices = menuServices;
+            this.user = user;
             Schemes = schemes;
         }
 
@@ -43,22 +51,15 @@ namespace Framework.Core
 
             if (!requirement.Permissions.Any())
             {
-                //var data = await _roleModulePermissionServices.RoleModuleMaps();
-                //var list = (from item in data
-                //            where item.IsDeleted == false
-                //            orderby item.Id
-                //            select new PermissionItem
-                //            {
-                //                Url = item.Module?.LinkUrl,
-                //                Role = item.Role?.Id.ObjToString(),
-                //            }).ToList();
-                //requirement.Permissions = list;
+                var data = await menuServices.PermissionItemViewsAsync(null);
+                requirement.Permissions = data;
             }
 
             //请求Url
             if (httpContext != null)
             {
                 var questUrl = httpContext.Request.Path.Value.ToLower();
+
                 //判断请求是否停止
                 var handlers = httpContext.RequestServices.GetRequiredService<IAuthenticationHandlerProvider>();
                 foreach (var scheme in await Schemes.GetRequestHandlerSchemesAsync())
@@ -77,85 +78,25 @@ namespace Framework.Core
                     //result?.Principal不为空即登录成功
                     if (result?.Principal != null)
                     {
-                        // 将最新的角色和接口列表更新
-
-                        // 这里暂时把代码移动到了Login获取token的api里,这样就不用每次都请求数据库,造成压力.
-                        // 但是这样有个问题,就是如果修改了某一个角色的菜单权限,不会立刻更新,
-                        // 需要让用户退出重新登录,如果你想实时更新,请把下边的注释打开即可.
-
-                        //var data = await _roleModulePermissionServices.RoleModuleMaps();
-                        //var list = (from item in data
-                        //            where item.IsDeleted == false
-                        //            orderby item.Id
-                        //            select new PermissionItem
-                        //            {
-                        //                Url = item.Module?.LinkUrl,
-                        //                Role = item.Role?.Name,
-                        //            }).ToList();
-                        //requirement.Permissions = list;
-
                         httpContext.User = result.Principal;
-
+                        var method = httpContext.Request.Method.ToLower();
+                        var PermissionsList = requirement.Permissions.Where(w => w.Url?.ToLower() == questUrl && w.method == method && w.Role == user.Role);
                         //权限中是否存在请求的url
-                        //if (requirement.Permissions.GroupBy(g => g.Url).Where(w => w.Key?.ToLower() == questUrl).Count() > 0)
-                        //if (isMatchUrl)
-                        if (true)
-                        {
-                            // 获取当前用户的角色信息
-                            var currentUserRoles = (from item in httpContext.User.Claims
-                                                    where item.Type == requirement.ClaimType
-                                                    select item.Value).ToList();
-
-                            var isMatchRole = true;
-                            var permisssionRoles = requirement.Permissions.Where(w => currentUserRoles.Contains(w.Role));
-                            foreach (var item in permisssionRoles)
-                            {
-                                try
-                                {
-                                    if (Regex.Match(questUrl, item.Url?.ObjToString().ToLower())?.Value == questUrl)
-                                    {
-                                        isMatchRole = true;
-                                        break;
-                                    }
-                                }
-                                catch (Exception)
-                                {
-                                    // ignored
-                                }
-                            }
-
-                            //验证权限
-                            //if (currentUserRoles.Count <= 0 || requirement.Permissions.Where(w => currentUserRoles.Contains(w.Role) && w.Url.ToLower() == questUrl).Count() <= 0)
-                            if (currentUserRoles.Count <= 0 || !isMatchRole)
-                            {
-                                context.Fail();
-                                return;
-                            }
-                        }
-
-                        //判断过期时间（这里仅仅是最坏验证原则，你可以不要这个if else的判断，因为我们使用的官方验证，Token过期后上边的result?.Principal 就为 null 了，进不到这里了，因此这里其实可以不用验证过期时间，只是做最后严谨判断）
-                        //if ((httpContext.User.Claims.SingleOrDefault(s => s.Type == ClaimTypes.Expiration)?.Value) != null && DateTime.Parse(httpContext.User.Claims.SingleOrDefault(s => s.Type == ClaimTypes.Expiration)?.Value) >= DateTime.Now)
-                        if(true)
+                        if (PermissionsList.Count() > 0)
                         {
                             context.Succeed(requirement);
-                        }
-                        else
-                        {
-                            context.Fail();
                             return;
                         }
+                    }
+                    //判断没有登录时，是否访问登录的url,并且是Post请求，并且是form表单提交类型，否则为失败
+                    if (!questUrl.Equals(requirement.LoginPath.ToLower(), StringComparison.Ordinal) && (!httpContext.Request.Method.Equals("POST") || !httpContext.Request.HasFormContentType))
+                    {
+                        context.Fail();
                         return;
                     }
                 }
-                //判断没有登录时，是否访问登录的url,并且是Post请求，并且是form表单提交类型，否则为失败
-                if (!questUrl.Equals(requirement.LoginPath.ToLower(), StringComparison.Ordinal) && (!httpContext.Request.Method.Equals("POST") || !httpContext.Request.HasFormContentType))
-                {
-                    context.Fail();
-                    return;
-                }
+                context.Succeed(requirement);
             }
-
-            context.Succeed(requirement);
         }
     }
 }

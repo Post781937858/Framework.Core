@@ -11,6 +11,9 @@ namespace Framework.Core
         /// 用户或角色或其他凭据名称
         /// </summary>
         public virtual string Role { get; set; }
+
+        public virtual string method { get; set; }
+
         /// <summary>
         /// 请求Url
         /// </summary>

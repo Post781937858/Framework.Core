@@ -10,10 +10,17 @@ namespace Framework.Core.Models
     public class MessageModel
     {
 
-        public MessageModel(bool _state)
+        public MessageModel(bool _state=true, string msg = "")
         {
             this.state = _state ? 200 : 500;
-            this.msg = _state ? "成功" : "失败";
+            if (string.IsNullOrEmpty(msg))
+            {
+                this.msg = _state ? "成功" : "失败";
+            }
+            else
+            {
+                this.msg = msg;
+            }
         }
 
 
@@ -34,7 +41,7 @@ namespace Framework.Core.Models
     public class MessageModel<T> : MessageModel
     {
 
-        public MessageModel(T data,bool _state = true) : base(_state)
+        public MessageModel(T data, bool _state = true, string msg = "") : base(_state, msg)
         {
             this.data = data;
         }

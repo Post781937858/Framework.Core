@@ -56,6 +56,10 @@ namespace Framework.Core.Services.Base
             return await BaseDal.Add(entity);
         }
 
+        public async Task<int> Add(List<TEntity> listEntity)
+        {
+            return await BaseDal.Add(listEntity);
+        }
         /// <summary>
         /// 更新实体数据
         /// </summary>
@@ -116,6 +120,10 @@ namespace Framework.Core.Services.Base
         }
 
 
+        public async Task<bool> Delete(Expression<Func<TEntity, bool>> whereExpression)
+        {
+            return await BaseDal.Delete(whereExpression);
+        }
 
         /// <summary>
         /// 功能描述:查询所有数据
@@ -263,6 +271,7 @@ namespace Framework.Core.Services.Base
         {
             return await BaseDal.QueryMuch(joinExpression, selectExpression, whereLambda);
         }
+
     }
 
 }

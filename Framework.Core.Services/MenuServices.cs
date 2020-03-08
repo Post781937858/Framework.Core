@@ -19,9 +19,9 @@ namespace Framework.Core.Services
             this.menuRepository = menuRepository;
         }
 
-        public Task<List<MenuView>> GetMenuAllViews(Expression<Func<Menu, bool>> expression)
+        public Task<List<MenuView>> GetMenuAllViews(Expression<Func<Menu, bool>> expression, Func<Menu, bool> expression1)
         {
-            return menuRepository.GetMenuAllViews(expression);
+            return menuRepository.GetMenuAllViews(expression, expression1);
         }
 
         public  Task<List<MenuView>> GetMenuViews()
@@ -29,5 +29,9 @@ namespace Framework.Core.Services
             return  menuRepository.GetMenuViews();
         }
 
+        public Task<List<PermissionItemView>> PermissionItemViewsAsync(Expression<Func<PowerDetail, Menu, bool>> expression)
+        {
+            return menuRepository.PermissionItemViewsAsync(expression);
+        }
     }
 }

@@ -44,11 +44,18 @@ namespace Framework.Core.Models.ViewModels
         /// </summary>
         public string explain { get; set; }
 
+
+        public bool Checked { get; set; } = false;
+
+
         /// <summary>
         /// 排序
         /// </summary>
         public int no { get; set; }
 
+        public string method { get; set; }
+
+        public List<MenuView> submenuApi { get; set; }
 
         public List<MenuView> submenu { get; set; }
        

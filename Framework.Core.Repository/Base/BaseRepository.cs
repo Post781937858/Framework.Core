@@ -178,9 +178,21 @@ namespace Framework.Core.Repository.Base
         public async Task<bool> Delete(TEntity entity)
         {
             //var i = await Task.Run(() => _db.Deleteable(entity).ExecuteCommand());
+           
             //return i > 0;
             return await _db.Deleteable(entity).ExecuteCommandHasChangeAsync();
         }
+
+        /// <summary>
+        /// 按条件删除数据
+        /// </summary>
+        /// <param name="whereExpression"></param>
+        /// <returns></returns>
+        public async Task<bool> Delete(Expression<Func<TEntity, bool>> whereExpression)
+        {
+            return await _db.Deleteable<TEntity>(whereExpression).ExecuteCommandHasChangeAsync();
+        }
+
 
         /// <summary>
         /// 删除指定ID的数据

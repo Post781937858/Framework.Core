@@ -42,6 +42,12 @@ namespace Framework.Core.Models
         public menuType menutype { get; set; }
 
         /// <summary>
+        /// API接口类型 GET POST Put Delete
+        /// </summary>
+        [SugarColumn(Length = 255, IsNullable = true, ColumnDataType = "nvarchar")]
+        public string method { get; set; }
+
+        /// <summary>
         /// 子菜单ID
         /// </summary>
         [SugarColumn(IsNullable = true)]

@@ -26,6 +26,7 @@ namespace Framework.Core.Models.ViewModels
 
         public int CreateUserId { get; set; }
 
+
         /// <summary>
         /// 创建时间
         /// </summary>

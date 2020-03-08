@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Framework.Core.Models.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
@@ -16,7 +17,7 @@ namespace Framework.Core
         /// 用户权限集合，一个订单包含了很多详情，
         /// 同理，一个网站的认证发行中，也有很多权限详情(这里是Role和URL的关系)
         /// </summary>
-        public List<PermissionItem> Permissions { get; set; }
+        public List<PermissionItemView> Permissions { get; set; }
         /// <summary>
         /// 无权限action
         /// </summary>
@@ -58,7 +59,7 @@ namespace Framework.Core
         /// <param name="audience">订阅人</param>
         /// <param name="signingCredentials">签名验证实体</param>
         /// <param name="expiration">过期时间</param>
-        public PermissionRequirement(string deniedAction, List<PermissionItem> permissions, string claimType, string issuer, string audience, SigningCredentials signingCredentials, TimeSpan expiration)
+        public PermissionRequirement(string deniedAction, List<PermissionItemView> permissions, string claimType, string issuer, string audience, SigningCredentials signingCredentials, TimeSpan expiration)
         {
             ClaimType = claimType;
             DeniedAction = deniedAction;
