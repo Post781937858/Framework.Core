@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Autofac;
 using Autofac.Extras.DynamicProxy;
+using Framework.Core.CodeTemplate;
 using Framework.Core.Common;
 using Framework.Core.Models.ViewModels;
 using Microsoft.AspNetCore.Authentication;
@@ -57,7 +58,7 @@ namespace Framework.Core
                 IsAutoCloseConnection = true,//默认false, 时候知道关闭数据库连接, 设置为true无需使用using或者Close操作
                 InitKeyType = InitKeyType.SystemTable //默认SystemTable, 字段信息读取, 如：该属性是不是主键，标识列等等信息
             }));
-
+            services.AddScoped<ICodeContext, CodeContext>();
             services.AddAutoMapperSetup();
             var jwtSetting = ServerJwtSetting.GetJwtSetting();
 

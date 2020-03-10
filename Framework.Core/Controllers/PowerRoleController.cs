@@ -23,14 +23,16 @@ namespace Framework.Core.Controllers
         private readonly IPowerDetailServices powerDetailServices;
         private readonly IUnitOfWork unitOfWork;
         private readonly IMapper mapper;
+        private readonly PermissionRequirement requirement;
 
-        public PowerRoleController(IPowerGroupServices powerGroupServices, IUser user, IPowerDetailServices powerDetailServices, IUnitOfWork unitOfWork, IMapper mapper)
+        public PowerRoleController(IPowerGroupServices powerGroupServices, IUser user, IPowerDetailServices powerDetailServices, IUnitOfWork unitOfWork, IMapper mapper, PermissionRequirement requirement)
         {
             this._powerGroupServices = powerGroupServices;
             this.user = user;
             this.powerDetailServices = powerDetailServices;
             this.unitOfWork = unitOfWork;
             this.mapper = mapper;
+            this.requirement = requirement;
         }
 
         /// <summary>
@@ -131,6 +133,7 @@ namespace Framework.Core.Controllers
                     }
                 });
                 await powerDetailServices.Add(menuViews);
+                requirement.Permissions = new List<PermissionItemView>();
                 unitOfWork.CommitTran();
             }
             catch (Exception)

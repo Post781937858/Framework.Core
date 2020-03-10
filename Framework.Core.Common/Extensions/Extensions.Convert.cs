@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 
 namespace Framework.Core.Common
 { 
@@ -241,5 +242,16 @@ namespace Framework.Core.Common
             return data == null ? string.Empty : data.ToString().Trim();
         }
         #endregion
+
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="address"></param>
+        /// <returns></returns>
+        public static string ToIPv4String(this IPAddress address)
+        {
+            var ipv4Address = (address ?? IPAddress.IPv6Loopback).ToString();
+            return ipv4Address.StartsWith("::ffff:") ? address.MapToIPv4().ToString() : ipv4Address;
+        }
     }
 }

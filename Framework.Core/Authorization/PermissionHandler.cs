@@ -51,7 +51,7 @@ namespace Framework.Core
 
             if (!requirement.Permissions.Any())
             {
-                var data = await menuServices.PermissionItemViewsAsync(null);
+                var data = await menuServices.PermissionItemViewsAsync();
                 requirement.Permissions = data;
             }
 

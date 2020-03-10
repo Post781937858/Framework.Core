@@ -29,7 +29,7 @@ namespace Framework.Core.Services
             return  menuRepository.GetMenuViews();
         }
 
-        public Task<List<PermissionItemView>> PermissionItemViewsAsync(Expression<Func<PowerDetail, Menu, bool>> expression)
+        public Task<List<PermissionItemView>> PermissionItemViewsAsync(Expression<Func<PowerDetail, Menu, bool>> expression = null)
         {
             return menuRepository.PermissionItemViewsAsync(expression);
         }

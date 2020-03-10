@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace Framework.Core.Common
@@ -41,6 +42,14 @@ namespace Framework.Core.Common
                 {
                     throw new Exception("DB配置错误请检查");
                 }
+            }
+        }
+
+        public static string DbName
+        {
+            get
+            {
+                return ConnectionString.Split(';').Where(p => p.ToLower().Contains("database")).FirstOrDefault().Split('=')[1];
             }
         }
     }

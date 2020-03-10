@@ -33,11 +33,11 @@ namespace Framework.Core.Repository
         /// </summary>
         /// <param name="expression"></param>
         /// <returns></returns>
-        public async Task<List<PermissionItemView>> PermissionItemViewsAsync(Expression<Func<PowerDetail, Menu, bool>> expression)
+        public async Task<List<PermissionItemView>> PermissionItemViewsAsync(Expression<Func<PowerDetail, Menu, bool>> expression = null)
         {
             return await base.Db.Queryable<PowerDetail, Menu>((r, b) => new object[] { JoinType.Right, r.menuid == b.Id })
                 .WhereIF(expression != null, expression)
-                .Select((r, b) => new PermissionItemView() { Url = b.url, Role = r.PowerName, method = b.method,id=b.Id }).ToListAsync();
+                .Select((r, b) => new PermissionItemView() { Url = b.url, Role = r.PowerName, method = b.method, id = b.Id }).ToListAsync();
         }
 
         /// <summary>

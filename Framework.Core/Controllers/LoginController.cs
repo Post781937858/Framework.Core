@@ -21,13 +21,15 @@ namespace Framework.Core.Controllers
         private readonly IUserServices services;
         private readonly ICache cache;
         private readonly PermissionRequirement requirement;
+        private readonly IoperatingLogServices ioperatingLogServices;
 
-        public LoginController(ILogger<LoginController>  logger, IUserServices services,ICache cache, PermissionRequirement requirement)
+        public LoginController(ILogger<LoginController>  logger, IUserServices services,ICache cache, PermissionRequirement requirement, IoperatingLogServices ioperatingLogServices)
         {
             this.logger = logger;
             this.services = services;
             this.cache = cache;
             this.requirement = requirement;
+            this.ioperatingLogServices = ioperatingLogServices;
         }
 
         /// <summary>
@@ -48,14 +50,30 @@ namespace Framework.Core.Controllers
         [HttpPost]
         public async Task<MessageModel<string>> LoginAsync(User user)
         {
-            string Key = $"User{user.UserNumber}";
+            string Key = $"errorcount_{user.UserNumber}";
             int errorcount = cache.GetValue(Key).ToInt();
             if (errorcount >= 10)
             {
                 return new MessageModel<string>(string.Empty, false, "失败次数过多，请五分钟后再试");
             }
+            var ipaddress = HttpContext.Connection.RemoteIpAddress.ToIPv4String();
+            var userAgent = HttpContext.Request.Headers["User-Agent"];
+            var agent = new UserAgent(userAgent);
+            var Browser = $"{agent.Browser?.Name} {agent.Browser?.Version}";
+            var OS = $"{agent.OS?.Name} {agent.OS?.Version}";
             var Md5Password = MD5Helper.MD5Encrypt32(user.Password);
             var User = (await services.Query(p => p.UserNumber == user.UserNumber && p.Password == Md5Password)).FirstOrDefault();
+            await ioperatingLogServices.Add(new operatingLog
+            {
+                Operating = "登录",
+                Date = DateTime.Now,
+                UserName = user.UserNumber,
+                ip = ipaddress,
+                Browser = Browser,
+                OS = OS,
+                state = User != null && User.UserState == 200 ? 200 : 500,
+                Details = User != null && User.UserState == 200 ? "通过登录授权" : "未通过登录授权"
+            });
             if (User != null && User.UserState == 200)
             {
                 requirement.Permissions = new List<Models.ViewModels.PermissionItemView>();
@@ -66,7 +84,7 @@ namespace Framework.Core.Controllers
             {
                 errorcount++;
                 cache.Set(Key, errorcount, TimeSpan.FromMinutes(5));
-                return new MessageModel<string>(string.Empty, false, (User != null && User.UserState == 500) ? "账户已冻结" : "密码错误，登录失败");
+                return new MessageModel<string>(string.Empty, false, (User != null && User.UserState == 500) ? "账户已冻结" : "账户或密码错误，登录失败");
             }
         }
     }

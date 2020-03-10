@@ -122,7 +122,7 @@ namespace Framework.Core.Controllers
                 {
                     throw new Exception("文件类型错误");
                 }
-                fileName = $"{user.Name}{Extension}";
+                fileName = $"{Guid.NewGuid().ToString()}{Extension}";
                 var filePath = Path.Combine(env.ContentRootPath, webSiteUrl.Replace("~", string.Empty).Replace('/', Path.DirectorySeparatorChar).TrimStart(Path.DirectorySeparatorChar) + fileName);
                 var fileFolder = Path.GetDirectoryName(filePath);
                 fileSize = uploadFile.Length;

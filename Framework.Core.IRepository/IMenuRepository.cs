@@ -15,7 +15,7 @@ namespace Framework.Core.IRepository
 
         Task<List<MenuView>> GetMenuAllViews(Expression<Func<Menu, bool>> expression, Func<Menu, bool> expression1);
 
-        Task<List<PermissionItemView>> PermissionItemViewsAsync(Expression<Func<PowerDetail, Menu, bool>> expression);
+        Task<List<PermissionItemView>> PermissionItemViewsAsync(Expression<Func<PowerDetail, Menu, bool>> expression = null);
     }
 
 }
