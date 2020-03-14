@@ -17,13 +17,13 @@ namespace Framework.Core.Controllers
     [Authorize(Permissions.Name)]
     [Route("api/[controller]")]
     [ApiController]
-    public class ErrorLogController : ControllerBase
+    public class BlogArticleController : ControllerBase
     {
-        private readonly IErrorLogServices _ErrorLogServices;
+        private readonly IBlogArticleServices _BlogArticleServices;
 
-        public ErrorLogController(IErrorLogServices _ErrorLogServices)
+        public BlogArticleController(IBlogArticleServices _BlogArticleServices)
         {
-            this._ErrorLogServices = _ErrorLogServices;
+            this._BlogArticleServices = _BlogArticleServices;
         }
 
         /// <summary>
@@ -31,19 +31,22 @@ namespace Framework.Core.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet]
-        public async Task<MessageModel<PageModel<ErrorLog>>> Query(String UserName, String errormsg, int Pageindex, int PageSize = 10)
+        public async Task<MessageModel<PageModel<BlogArticle>>> Query(String btitle, String bsubmitter, int Pageindex, int PageSize = 10)
         {
-            Expression<Func<ErrorLog, bool>> whereExpressionAll = r => true;
-            if (!string.IsNullOrEmpty(UserName))
+            Expression<Func<BlogArticle, bool>> whereExpressionAll = r => true;
+            if (!string.IsNullOrEmpty(btitle))
             {
-                whereExpressionAll = whereExpressionAll.And(p => p.UserName == UserName);
+                whereExpressionAll = whereExpressionAll.And(p => p.btitle == btitle);
             }
-            if (!string.IsNullOrEmpty(errormsg))
+
+            if (!string.IsNullOrEmpty(bsubmitter))
             {
-                whereExpressionAll = whereExpressionAll.And(p => p.errormsg == errormsg);
+                whereExpressionAll = whereExpressionAll.And(p => p.bsubmitter == bsubmitter);
             }
-            var data = await _ErrorLogServices.QueryPage(whereExpressionAll, Pageindex, PageSize);
-            return new MessageModel<PageModel<ErrorLog>>(data);
+
+
+            var data = await _BlogArticleServices.QueryPage(whereExpressionAll, Pageindex, PageSize);
+            return new MessageModel<PageModel<BlogArticle>>(data);
         }
 
         /// <summary>
@@ -52,10 +55,10 @@ namespace Framework.Core.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPost]
-        public async Task<MessageModel> Add(ErrorLog model)
+        public async Task<MessageModel> Add(BlogArticle model)
         {
             model.Id = 0;
-            return new MessageModel(await _ErrorLogServices.Add(model) > 0);
+            return new MessageModel(await _BlogArticleServices.Add(model) > 0);
         }
 
         /// <summary>
@@ -64,9 +67,9 @@ namespace Framework.Core.Controllers
         /// <param name="model"></param>
         /// <returns></returns>
         [HttpPut]
-        public async Task<MessageModel> Update(ErrorLog model)
+        public async Task<MessageModel> Update(BlogArticle model)
         {
-            return new MessageModel(await _ErrorLogServices.Update(model));
+            return new MessageModel(await _BlogArticleServices.Update(model));
         }
 
         /// <summary>
@@ -75,11 +78,11 @@ namespace Framework.Core.Controllers
         /// <param name="Listmodel"></param>
         /// <returns></returns>
         [HttpDelete]
-        public async Task<MessageModel> Delete(List<ErrorLog> Listmodel)
+        public async Task<MessageModel> Delete(List<BlogArticle> Listmodel)
         {
             List<object> Ids = new List<object>();
             Listmodel.ForEach(p => Ids.Add(p.Id));
-            return new MessageModel(await _ErrorLogServices.DeleteByIds(Ids.ToArray()));
+            return new MessageModel(await _BlogArticleServices.DeleteByIds(Ids.ToArray()));
         }
     }
 }

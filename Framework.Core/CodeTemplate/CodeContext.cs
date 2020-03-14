@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Text;
 
 namespace Framework.Core.CodeTemplate
 {
@@ -99,7 +100,7 @@ namespace Framework.Core.CodeTemplate
                     {
                         var attribute = item.GetCustomAttributes(true).FirstOrDefault(s => s.GetType() == typeof(SugarColumn));
                         var description = attribute != null ? (attribute as SugarColumn).ColumnDescription : "无";
-                        modelPropertys.Add(new modelProperty() { ColumnName = item.Name, ColumnType = item.PropertyType.FullName, ColumnDescription = description });
+                        modelPropertys.Add(new modelProperty() { ColumnName = item.Name, ColumnType = item.PropertyType.Name, ColumnDescription = description });
                     }
                 }
             }
@@ -110,33 +111,51 @@ namespace Framework.Core.CodeTemplate
         /// <summary>
         /// 创建前端页面
         /// </summary>
-        /// <param name="TableName"></param>
+        /// <param name="modelName"></param>
         /// <param name="Brief"></param>
         /// <param name="Propertys"></param>
         /// <returns></returns>
-        public async Task<string> CreateVueCode(string TableName, string Brief, List<modelProperty> Propertys)
+        public string CreateVueCode(string modelName, string Brief, List<modelProperty> Propertys)
         {
-            var Fields = await MysqlGetTableFieldAsync(TableName);
+            var modelPropertys =  GetProperty(modelName);
             TemplateEngine templateEngine = new TemplateEngine();
             templateEngine.SetFile("Tem", templateConfig.VueTemplateFile);
             templateEngine.SetBlock("Tem", "FieldList1", "list1", "<!--\\s+BEGIN FieldList1\\s+-->([\\s\\S.]*)<!--\\s+END FieldList1\\s+-->");
             templateEngine.SetBlock("Tem", "FieldList2", "list2", "<!--\\s+BEGIN FieldList2\\s+-->([\\s\\S.]*)<!--\\s+END FieldList2\\s+-->");
             templateEngine.SetBlock("Tem", "PropertyList", "Property", "<!--\\s+BEGIN PropertyList\\s+-->([\\s\\S.]*)<!--\\s+END PropertyList\\s+-->");
             templateEngine.m_noMarkers = "comment";
-            templateEngine.SetVal("t_name", TableName, false);
-            foreach (var item in Propertys)
+            templateEngine.SetVal("t_name", modelName, false);
+            if (Propertys.Any())
             {
-                templateEngine.SetVal("p_name", item.ColumnName, false);
-                templateEngine.SetVal("p_note", item.ColumnDescription, false);
-                templateEngine.Parse("Property", "PropertyList", true);
+                StringBuilder queryparameter = new StringBuilder();
+                foreach (var item in Propertys)
+                {
+                    templateEngine.SetVal("p_name", item.ColumnName, false);
+                    templateEngine.SetVal("p_note", item.ColumnDescription, false);
+                    templateEngine.Parse("Property", "PropertyList", true);
+                    if (item.ColumnType == typeof(string).Name)
+                    {
+                        queryparameter.Append($"{item.ColumnName}: '',\r\n");
+                    }
+                    else
+                    {
+                        queryparameter.Append($"{item.ColumnName}: null,\r\n");
+                    }
+
+                    templateEngine.SetVal("b_ queryparameter", queryparameter.ToString(), false);
+                }
+            }
+            else
+            {
+                templateEngine.SetVal("b_ queryparameter", "", false);
             }
             for (int i = 1; i <= 2; i++)
             {
-                foreach (TableFieldInfo f in Fields)
+                foreach (var f in modelPropertys)
                 {
-                    if (f.ColName.ToLower() == "id" || f.ColType.ToLower() == "dateTime") continue;
-                    var ColName = f.ColName.Substring(0, 1).ToLower() + f.ColName.Remove(0, 1);
-                    if (f.ColType.ToLower() == "int")
+                    if (f.ColumnName.ToLower() == "id") continue;
+                    var ColName = f.ColumnName.Substring(0, 1).ToLower() + f.ColumnName.Remove(0, 1);
+                    if (f.ColumnType == typeof(int).Name)
                     {
                         templateEngine.SetVal("f_type", ".number", false);
                     }
@@ -145,9 +164,62 @@ namespace Framework.Core.CodeTemplate
                         templateEngine.SetVal("f_type", "", false);
                     }
                     templateEngine.SetVal("f_name", ColName, false);
-                    templateEngine.SetVal("f_note", f.Brief, false);
+                    templateEngine.SetVal("f_note", f.ColumnDescription, false);
                     templateEngine.Parse($"list{i}", $"FieldList{i}", true);
                 }
+            }
+            templateEngine.Parse("out", "Tem", false);
+            return templateEngine.PutOutPageCode("out");
+        }
+
+        /// <summary>
+        /// 创建控制器类
+        /// </summary>
+        /// <returns></returns>
+        public string CreateControllersCode(string TableName, string CommentsValue, List<modelProperty> Propertys)
+        {
+            TemplateEngine templateEngine = new TemplateEngine();
+            templateEngine.SetFile("Tem", templateConfig.ControllersTemplateFile);
+            templateEngine.m_noMarkers = "comment";
+            templateEngine.SetVal("t_object", TableName, false);
+            if (Propertys.Any())
+            {
+                StringBuilder builder = new StringBuilder();
+                StringBuilder parameter = new StringBuilder();
+                foreach (var item in Propertys)
+                {
+                    var whereItem = string.Empty;
+                    if (item.ColumnType == typeof(string).Name)
+                    {
+                        whereItem = @"           if (!string.IsNullOrEmpty({t_item}))
+                            {
+                                whereExpressionAll = whereExpressionAll.And(p => p.{t_item} == {t_item});
+                            }
+                        " + "\r\n";
+                    }
+                    else if (item.ColumnType == typeof(int).Name)
+                    {
+                        whereItem = @"            if ({t_item} != 0)
+                                    {
+                                        whereExpressionAll = whereExpressionAll.And(p => p.{t_item} == {t_item});
+                                    }" + "\r\n";
+
+                    }
+                    else
+                    {
+                        whereItem = "          whereExpressionAll = whereExpressionAll.And(p => p.{t_item} == {t_item});" + "\r\n";
+                    }
+                    builder.Append(whereItem.Replace("{t_item}", item.ColumnName));
+                    parameter.Append($",{item.ColumnType}  {item.ColumnName}");
+                }
+                var parameterWhere = parameter.ToString() + ",";
+                templateEngine.SetVal("t_parameter", parameterWhere.Remove(0, 1), false);
+                templateEngine.SetVal("f_parameter", builder.ToString(), false);
+            }
+            else
+            {
+                templateEngine.SetVal("t_parameter", "", false);
+                templateEngine.SetVal("f_parameter", "", false);
             }
             templateEngine.Parse("out", "Tem", false);
             return templateEngine.PutOutPageCode("out");
@@ -247,20 +319,6 @@ namespace Framework.Core.CodeTemplate
         }
 
         /// <summary>
-        /// 创建控制器类
-        /// </summary>
-        /// <returns></returns>
-        public string CreateControllersCode(string TableName, string CommentsValue)
-        {
-            TemplateEngine templateEngine = new TemplateEngine();
-            templateEngine.SetFile("Tem", templateConfig.ControllersTemplateFile);
-            templateEngine.m_noMarkers = "comment";
-            templateEngine.SetVal("t_object", TableName, false);
-            templateEngine.Parse("out", "Tem", false);
-            return templateEngine.PutOutPageCode("out");
-        }
-
-        /// <summary>
         /// 获取配置信息
         /// </summary>
         /// <returns></returns>
@@ -288,13 +346,13 @@ namespace Framework.Core.CodeTemplate
             var model = codeView.model;
             resultCode resultCode = new resultCode();
 
-            resultCode.controllerCode += CreateControllersCode(model.modelName, model.Description) + "\r\n";
+            resultCode.controllerCode += CreateControllersCode(model.modelName, model.Description, codeView.Propertys) + "\r\n";
             resultCode.ModelCode += await CreateModelCode(model.modelName, model.Description) + "\r\n";
             resultCode.IRepositoryCode += CreateIRepositoryCode(model.modelName, model.Description) + "\r\n";
             resultCode.IServicesCode += CreateIServicesCode(model.modelName, model.Description) + "\r\n";
             resultCode.ServicesCode += CreateServicesCode(model.modelName, model.Description) + "\r\n";
             resultCode.RepositoryCode += CreateRepositoryCode(model.modelName, model.Description) + "\r\n";
-            resultCode.VueCode += await CreateVueCode(model.modelName, model.Description,codeView.Propertys) + "\r\n";
+            resultCode.VueCode +=  CreateVueCode(model.modelName, model.Description, codeView.Propertys) + "\r\n";
             return resultCode;
         }
 
@@ -315,13 +373,14 @@ namespace Framework.Core.CodeTemplate
             var VueDirectoryPath = Path.Combine(templateConfig.VueOutputFile, $"{model.modelName}\\");
             if (!Directory.Exists(VueDirectoryPath)) Directory.CreateDirectory(VueDirectoryPath);
             var VuePath = Path.Combine(templateConfig.VueOutputFile, $@"{model.modelName}\{model.modelName}.vue");
-            var VueCode = await CreateVueCode(model.modelName, model.Description, codeView.Propertys);
+            var VueCode =  CreateVueCode(model.modelName, model.Description, codeView.Propertys);
             if (!File.Exists(VuePath))
                 await File.WriteAllTextAsync(VuePath, VueCode);
 
             var ControllersPath = Path.Combine(BasePath, templateConfig.ControllersOutputFile, $"{model.modelName}Controller.cs");
-            var ControllersCode = CreateControllersCode(model.modelName, model.Description);
-            await File.WriteAllTextAsync(ControllersPath, ControllersCode);
+            var ControllersCode = CreateControllersCode(model.modelName, model.Description, codeView.Propertys);
+            if (!File.Exists(ControllersPath))
+                await File.WriteAllTextAsync(ControllersPath, ControllersCode);
 
             var IRepositoryPath = Path.Combine(BasePath, templateConfig.IRepositoryOutputFile, $"I{model.modelName}Repository.cs");
             var IRepositoryCode = CreateIRepositoryCode(model.modelName, model.Description);

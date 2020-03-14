@@ -77,7 +77,7 @@ export default {
       url: '/api/{t_name}',
       RoletableData: [],
       loading: true, // loading加载
-      QueryForm: {},
+      QueryForm: {{b_ queryparameter}},
       dialogVisible: false, // dialog显示
       rules: { // 表单验证
         userNumber: [

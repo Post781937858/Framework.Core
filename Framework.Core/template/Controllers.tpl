@@ -31,10 +31,10 @@ namespace Framework.Core.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet]
-        public async Task<MessageModel<PageModel<{t_object}>>> Query(int Pageindex, int PageSize = 10)
+        public async Task<MessageModel<PageModel<{t_object}>>> Query({t_parameter}int Pageindex, int PageSize = 10)
         {
             Expression<Func<{t_object}, bool>> whereExpressionAll = r => true;
-
+			{f_parameter}
             var data = await _{t_object}Services.QueryPage(whereExpressionAll, Pageindex, PageSize);
             return new MessageModel<PageModel<{t_object}>>(data);
         }
