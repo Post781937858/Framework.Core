@@ -41,9 +41,9 @@ namespace Framework.Core.Extensions
         }
 
         [HttpPost]
-        public async Task<MessageModel<resultCode>> ShowOutTemplateCodeAsync(CodeView codeView)
+        public MessageModel<resultCode> ShowOutTemplateCodeAsync(CodeView codeView)
         {
-            return new MessageModel<resultCode>(await codeContext.ShowOutTemplateCode(codeView));
+            return new MessageModel<resultCode>( codeContext.ShowOutTemplateCode(codeView));
         }
 
         [HttpPut]

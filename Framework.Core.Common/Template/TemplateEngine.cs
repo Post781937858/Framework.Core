@@ -38,6 +38,7 @@ namespace Framework.Core.Common
         /// <param name="p_file">模板路径</param>
         public void SetFile(string p_templateName, string p_file)
         {
+            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
             if (System.IO.File.Exists(p_file))
             {
                 m_blockList.Add(p_templateName, System.IO.File.ReadAllText(p_file, Encoding.GetEncoding("gb2312")));

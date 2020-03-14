@@ -14,7 +14,7 @@ namespace Framework.Core.CodeTemplate
 
         CodeView GetTemplateConfig();
 
-        Task<resultCode> ShowOutTemplateCode(CodeView codeView);
+        resultCode ShowOutTemplateCode(CodeView codeView);
 
         Task OutTemplateCode(CodeView codeView);
 

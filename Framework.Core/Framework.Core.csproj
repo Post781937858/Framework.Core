@@ -31,6 +31,8 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="5.0.0" />
 
     <PackageReference Include="Swashbuckle.AspNetCore.Filters" Version="5.0.0" />
+
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="4.7.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -46,6 +48,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Framework.db">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="template\Controllers.tpl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

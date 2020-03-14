@@ -82,7 +82,7 @@ namespace Framework.Core.Controllers
         [HttpGet("UserPower")]
         public async Task<MessageModel<int[]>> UserPower(string role)
         {
-            var data = await _menuServices.PermissionItemViewsAsync((r, b) => r.PowerName == role);
+            var data = await _menuServices.PermissionItemViewsAsync((b, r) => r.PowerName == role);
             return new MessageModel<int[]>(data.Select(p => p.id).ToArray());
         }
 

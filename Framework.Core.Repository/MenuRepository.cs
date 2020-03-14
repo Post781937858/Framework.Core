@@ -33,11 +33,11 @@ namespace Framework.Core.Repository
         /// </summary>
         /// <param name="expression"></param>
         /// <returns></returns>
-        public async Task<List<PermissionItemView>> PermissionItemViewsAsync(Expression<Func<PowerDetail, Menu, bool>> expression = null)
+        public async Task<List<PermissionItemView>> PermissionItemViewsAsync(Expression<Func<Menu, PowerDetail, bool>> expression = null)
         {
-            return await base.Db.Queryable<PowerDetail, Menu>((r, b) => new object[] { JoinType.Right, r.menuid == b.Id })
+            return await base.Db.Queryable<Menu, PowerDetail>((b, r) => new object[] { JoinType.Left, r.menuid == b.Id })
                 .WhereIF(expression != null, expression)
-                .Select((r, b) => new PermissionItemView() { Url = b.url, Role = r.PowerName, method = b.method, id = b.Id }).ToListAsync();
+                .Select((b, r) => new PermissionItemView() { Url = b.url, Role = r.PowerName, method = b.method, id = b.Id }).ToListAsync();
         }
 
         /// <summary>
@@ -70,7 +70,7 @@ namespace Framework.Core.Repository
             List<MenuView> menuViews = new List<MenuView>();
             if (!string.IsNullOrEmpty(_user.Role))
             {
-                var ListMenu = await base.Db.Queryable<PowerDetail, Menu>((r, b) => new object[] { JoinType.Right, r.menuid == b.Id }).Where((r, b) => r.PowerName == _user.Role && b.menutype == menuType.Menu).Select((r, b) => b).ToListAsync();
+                var ListMenu = await base.Db.Queryable<Menu, PowerDetail>((b,r) => new object[] { JoinType.Left, r.menuid == b.Id }).Where((b, r) => r.PowerName == _user.Role && b.menutype == menuType.Menu).Select((b, r) => b).ToListAsync();
                 ListMenu.Where(p => p.menuid == 999 && p.menutype == menuType.Menu)
                 .ToList().ForEach(p =>
                 {

@@ -228,26 +228,26 @@ namespace Framework.Core.CodeTemplate
         /// <summary>
         /// 创建模型
         /// </summary>
-        /// <param name="TableName"></param>
+        /// <param name="modelName"></param>
         /// <param name="Brief"></param>
         /// <returns></returns>
-        public async Task<string> CreateModelCode(string TableName, string Brief)
+        public string CreateModelCode(string modelName, string Brief)
         {
-            var Fields = await MysqlGetTableFieldAsync(TableName);
+            var modelPropertys = GetProperty(modelName);
             TemplateEngine templateEngine = new TemplateEngine();
             templateEngine.SetFile("Tem", templateConfig.ModelsTemplateFile);
             templateEngine.SetBlock("Tem", "FieldList1", "list1", "<!--\\s+BEGIN FieldList1\\s+-->([\\s\\S.]*)<!--\\s+END FieldList1\\s+-->");
             templateEngine.m_noMarkers = "comment";
-            templateEngine.SetVal("t_name", TableName, false);
+            templateEngine.SetVal("t_name", modelName, false);
             templateEngine.SetVal("t_note", Brief, false);
-            templateEngine.SetVal("t_object", TableName, false);
-            templateEngine.SetVal("t_namespace", TableName, false);
+            templateEngine.SetVal("t_object", modelName, false);
+            templateEngine.SetVal("t_namespace", modelName, false);
             templateEngine.SetVal("t_DateTime", DateTime.Now.ToString(), false);
-            foreach (TableFieldInfo f in Fields)
+            foreach (var f in modelPropertys)
             {
-                templateEngine.SetVal("f_name", f.ColName, false);
-                templateEngine.SetVal("f_type", f.ColType, false);
-                templateEngine.SetVal("f_note", f.Brief, false);
+                templateEngine.SetVal("f_name", f.ColumnName, false);
+                templateEngine.SetVal("f_type", f.ColumnType, false);
+                templateEngine.SetVal("f_note", f.ColumnDescription, false);
                 templateEngine.Parse("list1", "FieldList1", true);
             }
             templateEngine.Parse("out", "Tem", false);
@@ -341,13 +341,13 @@ namespace Framework.Core.CodeTemplate
         /// </summary>
         /// <param name="codeView"></param>
         /// <returns></returns>
-        public async Task<resultCode> ShowOutTemplateCode(CodeView codeView)
+        public resultCode ShowOutTemplateCode(CodeView codeView)
         {
             var model = codeView.model;
             resultCode resultCode = new resultCode();
 
             resultCode.controllerCode += CreateControllersCode(model.modelName, model.Description, codeView.Propertys) + "\r\n";
-            resultCode.ModelCode += await CreateModelCode(model.modelName, model.Description) + "\r\n";
+            resultCode.ModelCode +=  CreateModelCode(model.modelName, model.Description) + "\r\n";
             resultCode.IRepositoryCode += CreateIRepositoryCode(model.modelName, model.Description) + "\r\n";
             resultCode.IServicesCode += CreateIServicesCode(model.modelName, model.Description) + "\r\n";
             resultCode.ServicesCode += CreateServicesCode(model.modelName, model.Description) + "\r\n";
