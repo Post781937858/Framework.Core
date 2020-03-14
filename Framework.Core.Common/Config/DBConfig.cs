@@ -17,7 +17,6 @@ namespace Framework.Core.Common
         private static string mySqlConnection = Appsettings.app(new string[] { "DB", "MySql", "MySqlConnection" });
         private static bool isMySqlEnabled = (Appsettings.app(new string[] { "DB", "MySql", "Enabled" })).ToBool();
 
-
         public static DataBaseType DbType = DataBaseType.MySql;
         public static string ConnectionString
         {

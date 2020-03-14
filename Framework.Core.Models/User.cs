@@ -8,6 +8,8 @@ namespace Framework.Core.Models
     /// <summary>
     /// 用户实体
     /// </summary>
+    /// 
+    [ModelDescription(Description = "用户模型")]
     public class User: RootEntity
     {
         /// <summary>

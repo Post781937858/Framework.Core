@@ -5,6 +5,7 @@ using System.Text;
 
 namespace Framework.Core.Models
 {
+    [ModelDescription(Description = "权限详情模型")]
     public class PowerDetail : RootEntity
     {
         /// <summary>

@@ -8,6 +8,7 @@ namespace Framework.Core.Models
     /// <summary>
     ///功能实体
     /// </summary>
+    [ModelDescription(Description = "功能模型")]
     public class Menu : RootEntity
     {
         /// <summary>

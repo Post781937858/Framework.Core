@@ -5,6 +5,7 @@ using System.Text;
 
 namespace Framework.Core.Models
 {
+    [ModelDescription(Description = "操作日志模型")]
     public class operatingLog : RootEntity
     {
         /// <summary>
@@ -16,7 +17,7 @@ namespace Framework.Core.Models
         /// <summary>
         /// 用户名称
         /// </summary>
-        [SugarColumn(Length = 255, IsNullable = true, ColumnDataType = "nvarchar")]
+        [SugarColumn(Length = 255, IsNullable = true, ColumnDataType = "nvarchar", ColumnDescription= "用户名称")]
         public string UserName { get; set; }
 
         /// <summary>

@@ -45,6 +45,7 @@ namespace Framework.Core
             services.AddSingleton(new Appsettings(Configuration));
             services.AddScoped<ICache, MemoryCaching>();
             services.AddScoped<IUser, AspNetUser>();
+            services.AddSingleton<TemplateConfig>();
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddSingleton<IMemoryCache>(factory =>
             {

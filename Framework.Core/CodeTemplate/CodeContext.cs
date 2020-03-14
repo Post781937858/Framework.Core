@@ -1,7 +1,11 @@
 ﻿using Framework.Core.Common;
+using Framework.Core.Models;
+using Framework.Core.Models.ViewModels;
+using Microsoft.AspNetCore.Hosting;
 using SqlSugar;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -10,21 +14,30 @@ namespace Framework.Core.CodeTemplate
     public class CodeContext : ICodeContext
     {
         private readonly ISqlSugarClient _sqlSugarClient;
+        private readonly TemplateConfig templateConfig;
+        private readonly IWebHostEnvironment env;
 
-        public CodeContext(ISqlSugarClient sqlSugarClient)
+        public CodeContext(ISqlSugarClient sqlSugarClient, TemplateConfig templateConfig, IWebHostEnvironment env)
         {
             this._sqlSugarClient = sqlSugarClient;
+            this.templateConfig = templateConfig;
+            this.env = env;
         }
 
-
+        /// <summary>
+        /// 获取所有表信息
+        /// </summary>
+        /// <returns></returns>
         public async Task<List<TableInfo>> MysqlGetTablesAsync()
         {
+             GetModelInfos();
+            GetProperty("ErrorLog");
             return (await _sqlSugarClient.SqlQueryable<MysqlTableInfo>($"SELECT * FROM information_schema.TABLES  WHERE table_schema='{DBConfig.DbName}'")
                 .ToListAsync())
                 .Select(p => new TableInfo()
                 {
                     Name = p.TABLE_NAME,
-                    CommentsValue = p.TABLE_MOMMENT,
+                    Brief = string.IsNullOrEmpty(p.TABLE_MOMMENT) ? "无" : p.TABLE_MOMMENT,
                     RowsCount = p.TABLE_ROWS,
                     CreateTime = p.CREATE_TIME,
                     UpdateTime = p.UPDATE_TIME,
@@ -32,6 +45,11 @@ namespace Framework.Core.CodeTemplate
                 }).ToList();
         }
 
+        /// <summary>
+        /// 获取字段信息
+        /// </summary>
+        /// <param name="TableName"></param>
+        /// <returns></returns>
         public async Task<List<TableFieldInfo>> MysqlGetTableFieldAsync(string TableName)
         {
             return (await _sqlSugarClient.SqlQueryable<MysqlTableFieldInfo>($"select COLUMN_NAME,COLUMN_COMMENT,DATA_TYPE,IS_NULLABLE from information_schema.COLUMNS where table_schema='{DBConfig.DbName}' and  TABLE_NAME='{TableName}'")
@@ -39,61 +57,294 @@ namespace Framework.Core.CodeTemplate
                  {
                      ColDbType = p.DATA_TYPE,
                      IsNullAble = p.IS_NULLABLE.ToUpper() == "YES",
-                     CommentsValue = p.COLUMN_COMMENT,
+                     Brief = string.IsNullOrEmpty(p.COLUMN_COMMENT) ? "无" : p.COLUMN_COMMENT,
                      ColName = p.COLUMN_NAME,
                      TableName = TableName,
                      ColType = ConvertToDBType.MysqlChangeDBTypeToCSharpType(p.DATA_TYPE)
                  }).ToList();
         }
+
+        /// <summary>
+        /// 反射获取所有模型
+        /// </summary>
+        /// <returns></returns>
+        public List<modelInfo> GetModelInfos()
+        {
+            List<modelInfo> modelInfos = new List<modelInfo>();
+            var Types = typeof(RootEntity).Assembly.GetTypes().Where(p => p.BaseType == typeof(RootEntity));
+            foreach (var item in Types)
+            {
+                var attribute = item.GetCustomAttributes(true).FirstOrDefault(s => s.GetType() == typeof(ModelDescriptionAttribute));
+                var description = attribute != null ? (attribute as ModelDescriptionAttribute).Description : "无";
+                modelInfos.Add(new modelInfo() { modelName = item.Name, Description = description });
+            }
+            return modelInfos;
+        }
+
+        /// <summary>
+        /// 反射获取模型属性
+        /// </summary>
+        /// <param name="modelName"></param>
+        /// <returns></returns>
+        public List<modelProperty> GetProperty(string modelName)
+        {
+            List<modelProperty> modelPropertys = new List<modelProperty>();
+            if (!string.IsNullOrEmpty(modelName))
+            {
+                var Type = typeof(RootEntity).Assembly.GetTypes().FirstOrDefault(p => p.Name.ToLower() == modelName.ToLower());
+                if (Type != null)
+                {
+                    var Properties = Type.GetProperties();
+                    foreach (var item in Properties)
+                    {
+                        var attribute = item.GetCustomAttributes(true).FirstOrDefault(s => s.GetType() == typeof(SugarColumn));
+                        var description = attribute != null ? (attribute as SugarColumn).ColumnDescription : "无";
+                        modelPropertys.Add(new modelProperty() { ColumnName = item.Name, ColumnType = item.PropertyType.FullName, ColumnDescription = description });
+                    }
+                }
+            }
+            return modelPropertys;
+        }
+
+
+        /// <summary>
+        /// 创建前端页面
+        /// </summary>
+        /// <param name="TableName"></param>
+        /// <param name="Brief"></param>
+        /// <param name="Propertys"></param>
+        /// <returns></returns>
+        public async Task<string> CreateVueCode(string TableName, string Brief, List<modelProperty> Propertys)
+        {
+            var Fields = await MysqlGetTableFieldAsync(TableName);
+            TemplateEngine templateEngine = new TemplateEngine();
+            templateEngine.SetFile("Tem", templateConfig.VueTemplateFile);
+            templateEngine.SetBlock("Tem", "FieldList1", "list1", "<!--\\s+BEGIN FieldList1\\s+-->([\\s\\S.]*)<!--\\s+END FieldList1\\s+-->");
+            templateEngine.SetBlock("Tem", "FieldList2", "list2", "<!--\\s+BEGIN FieldList2\\s+-->([\\s\\S.]*)<!--\\s+END FieldList2\\s+-->");
+            templateEngine.SetBlock("Tem", "PropertyList", "Property", "<!--\\s+BEGIN PropertyList\\s+-->([\\s\\S.]*)<!--\\s+END PropertyList\\s+-->");
+            templateEngine.m_noMarkers = "comment";
+            templateEngine.SetVal("t_name", TableName, false);
+            foreach (var item in Propertys)
+            {
+                templateEngine.SetVal("p_name", item.ColumnName, false);
+                templateEngine.SetVal("p_note", item.ColumnDescription, false);
+                templateEngine.Parse("Property", "PropertyList", true);
+            }
+            for (int i = 1; i <= 2; i++)
+            {
+                foreach (TableFieldInfo f in Fields)
+                {
+                    if (f.ColName.ToLower() == "id" || f.ColType.ToLower() == "dateTime") continue;
+                    var ColName = f.ColName.Substring(0, 1).ToLower() + f.ColName.Remove(0, 1);
+                    if (f.ColType.ToLower() == "int")
+                    {
+                        templateEngine.SetVal("f_type", ".number", false);
+                    }
+                    else
+                    {
+                        templateEngine.SetVal("f_type", "", false);
+                    }
+                    templateEngine.SetVal("f_name", ColName, false);
+                    templateEngine.SetVal("f_note", f.Brief, false);
+                    templateEngine.Parse($"list{i}", $"FieldList{i}", true);
+                }
+            }
+            templateEngine.Parse("out", "Tem", false);
+            return templateEngine.PutOutPageCode("out");
+        }
+
+        /// <summary>
+        /// 创建模型
+        /// </summary>
+        /// <param name="TableName"></param>
+        /// <param name="Brief"></param>
+        /// <returns></returns>
+        public async Task<string> CreateModelCode(string TableName, string Brief)
+        {
+            var Fields = await MysqlGetTableFieldAsync(TableName);
+            TemplateEngine templateEngine = new TemplateEngine();
+            templateEngine.SetFile("Tem", templateConfig.ModelsTemplateFile);
+            templateEngine.SetBlock("Tem", "FieldList1", "list1", "<!--\\s+BEGIN FieldList1\\s+-->([\\s\\S.]*)<!--\\s+END FieldList1\\s+-->");
+            templateEngine.m_noMarkers = "comment";
+            templateEngine.SetVal("t_name", TableName, false);
+            templateEngine.SetVal("t_note", Brief, false);
+            templateEngine.SetVal("t_object", TableName, false);
+            templateEngine.SetVal("t_namespace", TableName, false);
+            templateEngine.SetVal("t_DateTime", DateTime.Now.ToString(), false);
+            foreach (TableFieldInfo f in Fields)
+            {
+                templateEngine.SetVal("f_name", f.ColName, false);
+                templateEngine.SetVal("f_type", f.ColType, false);
+                templateEngine.SetVal("f_note", f.Brief, false);
+                templateEngine.Parse("list1", "FieldList1", true);
+            }
+            templateEngine.Parse("out", "Tem", false);
+            return templateEngine.PutOutPageCode("out");
+        }
+
+        /// <summary>
+        /// 创建仓储接口
+        /// </summary>
+        /// <param name="TableName"></param>
+        /// <param name="CommentsValue"></param>
+        /// <returns></returns>
+        public string CreateIRepositoryCode(string TableName, string CommentsValue)
+        {
+            TemplateEngine templateEngine = new TemplateEngine();
+            templateEngine.SetFile("Tem", templateConfig.IRepositoryTemplateFile);
+            templateEngine.m_noMarkers = "comment";
+            templateEngine.SetVal("t_object", TableName, false);
+            templateEngine.Parse("out", "Tem", false);
+            return templateEngine.PutOutPageCode("out");
+        }
+
+        /// <summary>
+        /// 创建服务接口
+        /// </summary>
+        /// <param name="TableName"></param>
+        /// <param name="CommentsValue"></param>
+        /// <returns></returns>
+        public string CreateIServicesCode(string TableName, string CommentsValue)
+        {
+            TemplateEngine templateEngine = new TemplateEngine();
+            templateEngine.SetFile("Tem", templateConfig.IServicesTemplateFile);
+            templateEngine.m_noMarkers = "comment";
+            templateEngine.SetVal("t_object", TableName, false);
+            templateEngine.Parse("out", "Tem", false);
+            return templateEngine.PutOutPageCode("out");
+        }
+
+        /// <summary>
+        /// 创建仓储类
+        /// </summary>
+        /// <param name="TableName"></param>
+        /// <param name="CommentsValue"></param>
+        /// <returns></returns>
+        public string CreateRepositoryCode(string TableName, string CommentsValue)
+        {
+            TemplateEngine templateEngine = new TemplateEngine();
+            templateEngine.SetFile("Tem", templateConfig.RepositoryTemplateFile);
+            templateEngine.m_noMarkers = "comment";
+            templateEngine.SetVal("t_object", TableName, false);
+            templateEngine.Parse("out", "Tem", false);
+            return templateEngine.PutOutPageCode("out");
+        }
+
+        /// <summary>
+        /// 创建服务类
+        /// </summary>
+        /// <param name="TableName"></param>
+        /// <param name="CommentsValue"></param>
+        /// <returns></returns>
+        public string CreateServicesCode(string TableName, string CommentsValue)
+        {
+            TemplateEngine templateEngine = new TemplateEngine();
+            templateEngine.SetFile("Tem", templateConfig.ServicesTemplateFile);
+            templateEngine.m_noMarkers = "comment";
+            templateEngine.SetVal("t_object", TableName, false);
+            templateEngine.Parse("out", "Tem", false);
+            return templateEngine.PutOutPageCode("out");
+        }
+
+        /// <summary>
+        /// 创建控制器类
+        /// </summary>
+        /// <returns></returns>
+        public string CreateControllersCode(string TableName, string CommentsValue)
+        {
+            TemplateEngine templateEngine = new TemplateEngine();
+            templateEngine.SetFile("Tem", templateConfig.ControllersTemplateFile);
+            templateEngine.m_noMarkers = "comment";
+            templateEngine.SetVal("t_object", TableName, false);
+            templateEngine.Parse("out", "Tem", false);
+            return templateEngine.PutOutPageCode("out");
+        }
+
+        /// <summary>
+        /// 获取配置信息
+        /// </summary>
+        /// <returns></returns>
+        public CodeView GetTemplateConfig()
+        {
+            return new CodeView()
+            {
+                ModelOutputPath = templateConfig.ModelsOutputFile,
+                IRepositoryOutputPath = templateConfig.IRepositoryOutputFile,
+                IServicesOutputPath = templateConfig.IServicesOutputFile,
+                RepositoryOutputPath = templateConfig.RepositoryOutputFile,
+                ServicesOutputPath = templateConfig.ServicesOutputFile,
+                ControllersOutputPath = templateConfig.ControllersOutputFile,
+                VueOutputPath = templateConfig.VueOutputFile
+            };
+        }
+
+        /// <summary>
+        /// 输出所有映射文本
+        /// </summary>
+        /// <param name="codeView"></param>
+        /// <returns></returns>
+        public async Task<resultCode> ShowOutTemplateCode(CodeView codeView)
+        {
+            var model = codeView.model;
+            resultCode resultCode = new resultCode();
+
+            resultCode.controllerCode += CreateControllersCode(model.modelName, model.Description) + "\r\n";
+            resultCode.ModelCode += await CreateModelCode(model.modelName, model.Description) + "\r\n";
+            resultCode.IRepositoryCode += CreateIRepositoryCode(model.modelName, model.Description) + "\r\n";
+            resultCode.IServicesCode += CreateIServicesCode(model.modelName, model.Description) + "\r\n";
+            resultCode.ServicesCode += CreateServicesCode(model.modelName, model.Description) + "\r\n";
+            resultCode.RepositoryCode += CreateRepositoryCode(model.modelName, model.Description) + "\r\n";
+            resultCode.VueCode += await CreateVueCode(model.modelName, model.Description,codeView.Propertys) + "\r\n";
+            return resultCode;
+        }
+
+        /// <summary>
+        /// 创建模板映射文件
+        /// </summary>
+        /// <param name="codeView"></param>
+        /// <returns></returns>
+        public async Task OutTemplateCode(CodeView  codeView)
+        {
+            var model = codeView.model;
+            DirectoryInfo topDir = Directory.GetParent(env.ContentRootPath);
+            var BasePath = topDir.FullName;
+            //var ModelPath = Path.Combine(templateConfig.ModelsOutputFile, $"{model.Name}.cs");
+            //var ModelCode = await CreateModelCode(model.Name, model.Brief);
+            //await File.WriteAllTextAsync(ModelPath, ModelCode);
+
+            var VueDirectoryPath = Path.Combine(templateConfig.VueOutputFile, $"{model.modelName}\\");
+            if (!Directory.Exists(VueDirectoryPath)) Directory.CreateDirectory(VueDirectoryPath);
+            var VuePath = Path.Combine(templateConfig.VueOutputFile, $@"{model.modelName}\{model.modelName}.vue");
+            var VueCode = await CreateVueCode(model.modelName, model.Description, codeView.Propertys);
+            if (!File.Exists(VuePath))
+                await File.WriteAllTextAsync(VuePath, VueCode);
+
+            var ControllersPath = Path.Combine(BasePath, templateConfig.ControllersOutputFile, $"{model.modelName}Controller.cs");
+            var ControllersCode = CreateControllersCode(model.modelName, model.Description);
+            await File.WriteAllTextAsync(ControllersPath, ControllersCode);
+
+            var IRepositoryPath = Path.Combine(BasePath, templateConfig.IRepositoryOutputFile, $"I{model.modelName}Repository.cs");
+            var IRepositoryCode = CreateIRepositoryCode(model.modelName, model.Description);
+            if (!File.Exists(IRepositoryPath))
+                await File.WriteAllTextAsync(IRepositoryPath, IRepositoryCode);
+
+            var IServicesPath = Path.Combine(BasePath, templateConfig.IServicesOutputFile, $"I{model.modelName}Services.cs");
+            var IServicesCode = CreateIServicesCode(model.modelName, model.Description);
+            if (!File.Exists(IServicesPath))
+                await File.WriteAllTextAsync(IServicesPath, IServicesCode);
+
+            var ServicesPath = Path.Combine(BasePath, templateConfig.ServicesOutputFile, $"{model.modelName}Services.cs");
+            var ServicesCode = CreateServicesCode(model.modelName, model.Description);
+            if (!File.Exists(ServicesPath))
+                await File.WriteAllTextAsync(ServicesPath, ServicesCode);
+
+            var RepositoryPath = Path.Combine(BasePath, templateConfig.RepositoryOutputFile, $"{model.modelName}Repository.cs");
+            var RepositoryCode = CreateRepositoryCode(model.modelName, model.Description);
+            if (!File.Exists(RepositoryPath))
+                await File.WriteAllTextAsync(RepositoryPath, RepositoryCode);
+        }
     }
 
 
-    #region 实体模型
 
-    public class MysqlTableInfo
-    {
-        public string TABLE_NAME { get; set; } //表名称
-        public string TABLE_MOMMENT { get; set; } //表注释
-        public string TABLE_ROWS { get; set; } //表行数
-        public string CREATE_TIME { get; set; } //创建时间
-        public string UPDATE_TIME { get; set; } //更新时间
-        public string TABLE_COLLATION { get; set; } //编码格式
-    }
-
-    public class TableInfo
-    {
-        public string Name { get; set; } //表名称
-        public string CommentsValue { get; set; } //表注释
-
-        public string RowsCount { get; set; } //表行数
-
-        public string CreateTime { get; set; } //创建时间
-
-        public string UpdateTime { get; set; } //更新时间
-
-        public string encode { get; set; }//编码格式
-
-        public bool hasChildren { get; set; } = true;  //视图用
-    }
-
-    public class MysqlTableFieldInfo
-    {
-        public string COLUMN_NAME { get; set; }  //字段名称
-        public string COLUMN_COMMENT { get; set; }  //字段注释
-        public string DATA_TYPE { get; set; } //字段类型
-        public string IS_NULLABLE { get; set; } //NO不为空 YSE为空
-    }
-
-    public class TableFieldInfo
-    {
-        public string ColDbType { get; set; } //数据库对应字段类型
-        public string ColName { get; set; }  //列名
-        public string ColType { get; set; }  //代码对应类型
-        public bool IsNullAble { get; set; } //是否为空
-        public string CommentsValue { get; set; } //字段注释
-        public string TableName { get; set; } //表名
-    }
-
-
-    #endregion
 }

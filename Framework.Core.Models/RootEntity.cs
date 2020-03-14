@@ -10,7 +10,7 @@ namespace Framework.Core.Models
         /// <summary>
         /// ID
         /// </summary>
-        [SugarColumn(IsNullable = false, IsPrimaryKey = true, IsIdentity = true)]
+        [SugarColumn(IsNullable = false, IsPrimaryKey = true, IsIdentity = true, ColumnDescription = "主键")]
         public int Id { get; set; }
     }
 }

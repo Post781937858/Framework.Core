@@ -1,4 +1,4 @@
-﻿using Framework.Core.IRepository;
+using Framework.Core.IRepository;
 using Framework.Core.IServices;
 using Framework.Core.Models;
 using Framework.Core.Services.Base;
@@ -8,11 +8,11 @@ using System.Text;
 
 namespace Framework.Core.Services
 {
-    public class UserService : BaseServices<User>, IUserServices
+    public class ErrorLogService : BaseServices<ErrorLog>, IErrorLogServices
     {
-        public UserService(IUserRepository Repository) : base(Repository)
+        public ErrorLogService(IErrorLogRepository Repository) : base(Repository)
         {
-            
+           
         }
     }
 }

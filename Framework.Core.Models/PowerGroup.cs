@@ -5,6 +5,7 @@ using System.Text;
 
 namespace Framework.Core.Models
 {
+    [ModelDescription(Description = "角色模型")]
     public class PowerGroup: RootEntity
     {
         /// <summary>

@@ -15,7 +15,7 @@ namespace Framework.Core.Models
             this.state = _state ? 200 : 500;
             if (string.IsNullOrEmpty(msg))
             {
-                this.msg = _state ? "成功" : "失败";
+                this.msg = _state ? "操作成功" : "操作失败";
             }
             else
             {
