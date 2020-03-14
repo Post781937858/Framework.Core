@@ -82,7 +82,7 @@ namespace Framework.Core
                         var method = httpContext.Request.Method.ToLower();
                         var PermissionsList = requirement.Permissions.Where(w => w.Url?.ToLower() == questUrl && w.method == method && w.Role == user.Role);
                         //权限中是否存在请求的url
-                        if (PermissionsList.Count() > 0 ||true)
+                        if (PermissionsList.Count() > 0)
                         {
                             context.Succeed(requirement);
                             return;
