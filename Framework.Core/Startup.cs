@@ -9,7 +9,9 @@ using Autofac;
 using Autofac.Extras.DynamicProxy;
 using Framework.Core.CodeTemplate;
 using Framework.Core.Common;
+using Framework.Core.Extensions;
 using Framework.Core.Models.ViewModels;
+using Grpc.Core;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -26,6 +28,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using SqlSugar;
 using Swashbuckle.AspNetCore.Filters;
+using static Framework.Core.QuartzServices;
 
 namespace Framework.Core
 {
@@ -42,7 +45,8 @@ namespace Framework.Core
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddSingleton(new Appsettings(Configuration));
+            //services.AddGrpc();
+            services.AddSingleton(new Appsettings());
             services.AddScoped<ICache, MemoryCaching>();
             services.AddScoped<IUser, AspNetUser>();
             services.AddSingleton<TemplateConfig>();
@@ -52,13 +56,12 @@ namespace Framework.Core
                 var cache = new MemoryCache(new MemoryCacheOptions());
                 return cache;
             });
-            services.AddScoped<SqlSugar.ISqlSugarClient>(p => new SqlSugar.SqlSugarClient(new SqlSugar.ConnectionConfig()
+            services.AddScoped<SqlSugar.ISqlSugarClient>(p => DBClientManage.GetSqlSugarClient());
+            services.AddSingleton<QuartzServicesClient>(p =>
             {
-                ConnectionString = DBConfig.ConnectionString,//必填, 数据库连接字符串
-                DbType = (SqlSugar.DbType)DBConfig.DbType,//必填, 数据库类型
-                IsAutoCloseConnection = true,//默认false, 时候知道关闭数据库连接, 设置为true无需使用using或者Close操作
-                InitKeyType = InitKeyType.SystemTable //默认SystemTable, 字段信息读取, 如：该属性是不是主键，标识列等等信息
-            }));
+                Channel _channel = new Channel(Appsettings.app(new string[] { "AppSettings", "gRPCClient", "ConnectionString" }), ChannelCredentials.Insecure);
+                return new QuartzServicesClient(_channel);
+            });
             services.AddScoped<ICodeContext, CodeContext>();
             services.AddAutoMapperSetup();
             var jwtSetting = ServerJwtSetting.GetJwtSetting();
@@ -74,7 +77,10 @@ namespace Framework.Core
                 expiration: TimeSpan.FromSeconds(60 * 60)//接口的过期时间
                 );
 
-
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("public", policy => policy.RequireRole("public").Build());
+            });
             // 3、复杂的策略授权
             services.AddAuthorization(options =>
             {
@@ -143,7 +149,8 @@ namespace Framework.Core
                 //// 配置apixml名称
                 option.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, $"{typeof(Startup).Assembly.GetName().Name}.xml"), true);
             });
-            DBClientManage.SeedAsync().Wait();
+            DBStartup.SeedAsync().Wait();
+            //去除Json序列化DateTime类型 T字符
             services.AddControllers().AddJsonOptions(configure =>
             {
                 configure.JsonSerializerOptions.Converters.Add(new DatetimeJsonConverter());
@@ -228,6 +235,7 @@ namespace Framework.Core
 
             app.UseEndpoints(endpoints =>
             {
+                //endpoints.MapGrpcService<MsgServiceImpl>();
                 endpoints.MapControllers();
             });
         }

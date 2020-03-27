@@ -37,10 +37,10 @@ namespace Framework.Core
         /// <param name="user"></param>
         public PermissionHandler(IAuthenticationSchemeProvider schemes, IHttpContextAccessor accessor, IMenuServices menuServices, IUser user)
         {
-            _accessor = accessor;
+            this._accessor = accessor;
             this.menuServices = menuServices;
             this.user = user;
-            Schemes = schemes;
+            this.Schemes = schemes;
         }
 
         // 重写异步处理程序
@@ -80,7 +80,7 @@ namespace Framework.Core
                     {
                         httpContext.User = result.Principal;
                         var method = httpContext.Request.Method.ToLower();
-                        var PermissionsList = requirement.Permissions.Where(w => w.Url?.ToLower() == questUrl && w.method == method && w.Role == user.Role);
+                        var PermissionsList = requirement.Permissions.Where(w => w.Url?.ToLower() == questUrl && w.method.ToLower() == method && w.Role == user.Role);
                         //权限中是否存在请求的url
                         if (PermissionsList.Count() > 0)
                         {

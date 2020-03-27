@@ -62,6 +62,23 @@ namespace Framework.Core.Controllers
         }
 
         /// <summary>
+        /// 获取用户信息
+        /// </summary>
+        /// <returns></returns>
+        [Authorize]
+        [HttpGet("GetUser")]
+        public async Task<MessageModel<User>> GetUser()
+        {
+            var UserItem = await userServices.QueryById(user.ID);
+            if (UserItem != null)
+            {
+                UserItem.Password = "";
+            }
+            return new MessageModel<User>(UserItem);
+        }
+
+
+        /// <summary>
         /// 添加
         /// </summary>
         /// <param name="model"></param>
@@ -85,6 +102,20 @@ namespace Framework.Core.Controllers
         {
             model.Password = MD5Helper.MD5Encrypt32(model.Password);
             return new MessageModel(await userServices.Update(model));
+        }
+
+        [Authorize]
+        [HttpPut("userSetting")]
+        public async Task<MessageModel> userSetting(User model)
+        {
+            var user = await userServices.QueryById(model.Id);
+            if (user != null)
+            {
+                model.Password = user.Password;
+                return new MessageModel(await userServices.Update(model));
+            }
+            else
+                return new MessageModel(false);
         }
 
         /// <summary>
@@ -117,8 +148,8 @@ namespace Framework.Core.Controllers
                 var uploadFile = files.Files[0];
                 var webSiteUrl = "~/images/uploader/UserIcon/";
                 var Extension = Path.GetExtension(uploadFile.FileName);
-                string[] extension = { ".jpg", ".png",".svg", ".jpeg" };
-                if(!extension.Contains(Extension.ToLower()))
+                string[] extension = { ".jpg", ".png", ".svg", ".jpeg", ".gif" };
+                if (!extension.Contains(Extension.ToLower()))
                 {
                     throw new Exception("文件类型错误");
                 }

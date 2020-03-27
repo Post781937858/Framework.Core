@@ -3,19 +3,17 @@
     <div class="app-centre">
        <div class="app-Tag-row app-Tag-row-panel">
        <div class="app-form">
-    <el-form :inline="true"  class="demo-form-inline" ref="QueryForm" :model="QueryForm"><!-- BEGIN PropertyList -->
-      <el-form-item label="{p_note}" prop='{p_name}'>
-        <el-input placeholder="{p_note}" v-model="QueryForm.{p_name}"></el-input>
-      </el-form-item><!-- END PropertyList -->
-      <el-form-item>
+    <el-form :inline="true"  class="demo-form-inline" ref="QueryForm" :model="QueryForm">
+{f_queryformitem}
+      <el-form-item class="btnQuery">
         <el-button type="primary"  @click="Query">查询</el-button>
       </el-form-item>
-      <el-form-item>
-        <el-button  @click="reset">重置</el-button>
+      <el-form-item class="btnQuery">
+		<el-button  @click="reset">重置</el-button>
       </el-form-item>
     </el-form>
        </div>
-       <div class="form-bar">
+       <div class="form-bar" {m_Istool}>
     <el-button-group>
    <el-button type="primary" icon="el-icon-plus" @click="BarAdd">新增</el-button>
    <el-button type="primary" icon="el-icon-edit" @click="BarEdit">编辑</el-button>
@@ -34,7 +32,7 @@
        >
             <el-table-column prop="id"  type="selection" align="center"  width="40"></el-table-column><!-- BEGIN FieldList1 -->
             <el-table-column prop="{f_name}" label="{f_note}" align="center"></el-table-column><!-- END FieldList1 -->
-      <el-table-column label="操作" width="180"  align="center" >
+      <el-table-column label="操作" width="180"  align="center" {m_Istool}>
         <template slot-scope="scope" >
           <div><a  @click="AppEdit(scope.$index, scope.row)">编辑</a>
           <div class="ivu-divider ivu-divider-vertical ivu-divider-default"></div>
@@ -54,11 +52,9 @@
       @close="resetdialog"
       :append-to-body='true'
       :visible.sync="dialogVisible"
-      width="27%">
-      <el-form :model="ruleForm" label-position="top" label-width="80px" :rules="rules" ref='ruleForm'><!-- BEGIN FieldList2 -->
-      <el-form-item label="{f_note}" prop='{f_name}'>
-        <el-input  v-model{f_type}="ruleForm.{f_name}"></el-input>
-      </el-form-item><!-- END FieldList2 -->
+      width="1000px">
+      <el-form :model="ruleForm" class="demo-form-inline" :inline="true" label-width="80px" :rules="rules" ref='ruleForm'>
+{dlog_formItem}
     </el-form>
       <span slot="footer" class="dialog-footer">
         <el-button @click="dialogVisible = false">取 消</el-button>
@@ -68,7 +64,6 @@
   </div>
 </template>
 <script>
-// import api from '@/api/api'
 import elPagination from '@/components/Pagination'
 export default {
   components: { elPagination },
@@ -77,24 +72,10 @@ export default {
       url: '/api/{t_name}',
       RoletableData: [],
       loading: true, // loading加载
-      QueryForm: {{b_ queryparameter}},
+      QueryForm: {{b_queryparameter}},
       dialogVisible: false, // dialog显示
       rules: { // 表单验证
-        userNumber: [
-          { required: true, message: '不能为空', trigger: 'blur' }
-        ],
-        password: [
-          { required: true, message: '不能为空', trigger: 'blur' }
-        ],
-        checkpassword: [
-          { required: true, message: '不能为空', trigger: 'blur' }
-        ],
-        powerName: [
-          { required: true, message: '不能为空', trigger: 'blur' }
-        ],
-        showName: [
-          { required: true, message: '不能为空', trigger: 'blur' }
-        ]
+	   {p_verification}
       },
       ruleForm: {}, // 表单模型
       Isedit: false, // 是否编辑

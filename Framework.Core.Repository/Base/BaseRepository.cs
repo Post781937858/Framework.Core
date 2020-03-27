@@ -104,7 +104,7 @@ namespace Framework.Core.Repository.Base
         /// <summary>
         /// 更新实体数据
         /// </summary>
-        /// <param name="entity">博文实体类</param>
+        /// <param name="entity"></param>
         /// <returns></returns>
         public async Task<bool> Update(TEntity entity)
         {

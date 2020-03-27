@@ -48,13 +48,13 @@ namespace Framework.Core.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpPost]
-        public async Task<MessageModel<string>> LoginAsync(User user)
+        public async Task<MessageModel<object>> LoginAsync(User user)
         {
             string Key = $"errorcount_{user.UserNumber}";
             int errorcount = cache.GetValue(Key).ToInt();
             if (errorcount >= 10)
             {
-                return new MessageModel<string>(string.Empty, false, "失败次数过多，请五分钟后再试");
+                return new MessageModel<object>(string.Empty, false, "失败次数过多，请五分钟后再试");
             }
             var ipaddress = HttpContext.Connection.RemoteIpAddress.ToIPv4String();
             var userAgent = HttpContext.Request.Headers["User-Agent"];
@@ -78,13 +78,14 @@ namespace Framework.Core.Controllers
             {
                 requirement.Permissions = new List<Models.ViewModels.PermissionItemView>();
                 if (errorcount != 0) cache.Remove(Key);
-                return new MessageModel<string>(JWTTokenService.GetToken(new TokenModelJwt() { Uid = User.Id, Name = User.showName, Role = User.PowerName }));
+                User.Password = string.Empty;
+                return new MessageModel<object>(new { user = User, Token = JWTTokenService.GetToken(new TokenModelJwt() { Uid = User.Id, Name = User.showName, Role = User.PowerName }) });
             }
             else
             {
                 errorcount++;
                 cache.Set(Key, errorcount, TimeSpan.FromMinutes(5));
-                return new MessageModel<string>(string.Empty, false, (User != null && User.UserState == 500) ? "账户已冻结" : "账户或密码错误，登录失败");
+                return new MessageModel<object>(null, false, (User != null && User.UserState == 500) ? "账户已冻结" : "账户或密码错误，登录失败");
             }
         }
     }

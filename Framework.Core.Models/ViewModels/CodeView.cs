@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 
 namespace Framework.Core.Models.ViewModels
@@ -30,6 +31,18 @@ namespace Framework.Core.Models.ViewModels
         public List<modelProperty> Propertys { get; set; }
 
         public modelInfo model { get; set; }
+
+        public int menuId { get; set; }
+
+        public string icon { get; set; }
+
+        public string url { get; set; }
+
+        public int sort { get; set; }
+
+        public string description { get; set; }
+
+        public string title { get; set; }
     }
 
     public class resultCode
@@ -61,7 +74,7 @@ namespace Framework.Core.Models.ViewModels
         public string Description { get; set; }
     }
 
-    public class modelProperty
+    public class modelPropertyView
     {
         public string ColumnName { get; set; }
 
@@ -70,6 +83,10 @@ namespace Framework.Core.Models.ViewModels
         public string ColumnDescription { get; set; }
     }
 
+    public class modelProperty : modelPropertyView, IMapperTo<modelPropertyView>
+    {
+        public PropertyInfo propertyInfo { get; set; }
+    }
 
 
     public class MysqlTableInfo

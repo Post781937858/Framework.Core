@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Text;
+using System.Reflection;
 
 namespace Framework.Core.CodeTemplate
 {
@@ -31,8 +32,6 @@ namespace Framework.Core.CodeTemplate
         /// <returns></returns>
         public async Task<List<TableInfo>> MysqlGetTablesAsync()
         {
-             GetModelInfos();
-            GetProperty("ErrorLog");
             return (await _sqlSugarClient.SqlQueryable<MysqlTableInfo>($"SELECT * FROM information_schema.TABLES  WHERE table_schema='{DBConfig.DbName}'")
                 .ToListAsync())
                 .Select(p => new TableInfo()
@@ -69,7 +68,7 @@ namespace Framework.Core.CodeTemplate
         /// 反射获取所有模型
         /// </summary>
         /// <returns></returns>
-        public List<modelInfo> GetModelInfos()
+        public List<modelInfo> GetModelInfos(string modelName = "")
         {
             List<modelInfo> modelInfos = new List<modelInfo>();
             var Types = typeof(RootEntity).Assembly.GetTypes().Where(p => p.BaseType == typeof(RootEntity));
@@ -78,6 +77,10 @@ namespace Framework.Core.CodeTemplate
                 var attribute = item.GetCustomAttributes(true).FirstOrDefault(s => s.GetType() == typeof(ModelDescriptionAttribute));
                 var description = attribute != null ? (attribute as ModelDescriptionAttribute).Description : "无";
                 modelInfos.Add(new modelInfo() { modelName = item.Name, Description = description });
+            }
+            if (!string.IsNullOrEmpty(modelName))
+            {
+                return modelInfos.Where(p => p.modelName.Contains(modelName)).ToList();
             }
             return modelInfos;
         }
@@ -100,7 +103,12 @@ namespace Framework.Core.CodeTemplate
                     {
                         var attribute = item.GetCustomAttributes(true).FirstOrDefault(s => s.GetType() == typeof(SugarColumn));
                         var description = attribute != null ? (attribute as SugarColumn).ColumnDescription : "无";
-                        modelPropertys.Add(new modelProperty() { ColumnName = item.Name, ColumnType = item.PropertyType.Name, ColumnDescription = description });
+                        var columnType = item.PropertyType.Name;
+                        if (item.PropertyType.BaseType == typeof(System.Enum))
+                        {
+                            columnType = typeof(System.Enum).Name;
+                        }
+                        modelPropertys.Add(new modelProperty() { ColumnName = item.Name, ColumnType = columnType, ColumnDescription = description, propertyInfo = item });
                     }
                 }
             }
@@ -113,26 +121,30 @@ namespace Framework.Core.CodeTemplate
         /// </summary>
         /// <param name="modelName"></param>
         /// <param name="Brief"></param>
-        /// <param name="Propertys"></param>
+        /// <param name="codeView"></param>
         /// <returns></returns>
-        public string CreateVueCode(string modelName, string Brief, List<modelProperty> Propertys)
+        public string CreateVueCode(string modelName, string Brief, CodeView codeView)
         {
-            var modelPropertys =  GetProperty(modelName);
+            List<modelProperty> Propertys = codeView.Propertys;
+            var modelPropertys = GetProperty(modelName);
             TemplateEngine templateEngine = new TemplateEngine();
             templateEngine.SetFile("Tem", templateConfig.VueTemplateFile);
             templateEngine.SetBlock("Tem", "FieldList1", "list1", "<!--\\s+BEGIN FieldList1\\s+-->([\\s\\S.]*)<!--\\s+END FieldList1\\s+-->");
-            templateEngine.SetBlock("Tem", "FieldList2", "list2", "<!--\\s+BEGIN FieldList2\\s+-->([\\s\\S.]*)<!--\\s+END FieldList2\\s+-->");
-            templateEngine.SetBlock("Tem", "PropertyList", "Property", "<!--\\s+BEGIN PropertyList\\s+-->([\\s\\S.]*)<!--\\s+END PropertyList\\s+-->");
             templateEngine.m_noMarkers = "comment";
             templateEngine.SetVal("t_name", modelName, false);
+            if (!codeView.tableToolOn)
+            {
+                templateEngine.SetVal("m_Istool", "", false);
+            }
+            else
+            {
+                templateEngine.SetVal("m_Istool", "v-if='false'", false);
+            }
             if (Propertys.Any())
             {
                 StringBuilder queryparameter = new StringBuilder();
                 foreach (var item in Propertys)
                 {
-                    templateEngine.SetVal("p_name", item.ColumnName, false);
-                    templateEngine.SetVal("p_note", item.ColumnDescription, false);
-                    templateEngine.Parse("Property", "PropertyList", true);
                     if (item.ColumnType == typeof(string).Name)
                     {
                         queryparameter.Append($"{item.ColumnName}: '',\r\n");
@@ -141,35 +153,81 @@ namespace Framework.Core.CodeTemplate
                     {
                         queryparameter.Append($"{item.ColumnName}: null,\r\n");
                     }
-
-                    templateEngine.SetVal("b_ queryparameter", queryparameter.ToString(), false);
+                    item.propertyInfo = modelPropertys.FirstOrDefault(p => p.ColumnName.ToLower() == item.ColumnName.ToLower()).propertyInfo;
                 }
+                templateEngine.SetVal("b_queryparameter", queryparameter.ToString(), false);
+                templateEngine.SetVal("f_queryformitem", GroupFormItem(Propertys, "QueryForm"), false);
             }
             else
             {
                 templateEngine.SetVal("b_ queryparameter", "", false);
             }
-            for (int i = 1; i <= 2; i++)
+            var DlogForm = GroupFormItem(modelPropertys, "ruleForm");
+            templateEngine.SetVal("dlog_formItem", DlogForm, false);
+            StringBuilder verification = new StringBuilder();
+            foreach (var item in modelPropertys)
             {
-                foreach (var f in modelPropertys)
+                var ColName = item.ColumnName.Substring(0, 1).ToLower() + item.ColumnName.Remove(0, 1);
+                verification.Append("{item}: [{ required: true, message: '不能为空', trigger: 'blur' }],".Replace("{item}", ColName));
+                if (item.ColumnName.ToLower() == "id") continue;
+                if (item.ColumnType == typeof(int).Name)
                 {
-                    if (f.ColumnName.ToLower() == "id") continue;
-                    var ColName = f.ColumnName.Substring(0, 1).ToLower() + f.ColumnName.Remove(0, 1);
-                    if (f.ColumnType == typeof(int).Name)
-                    {
-                        templateEngine.SetVal("f_type", ".number", false);
-                    }
-                    else
-                    {
-                        templateEngine.SetVal("f_type", "", false);
-                    }
-                    templateEngine.SetVal("f_name", ColName, false);
-                    templateEngine.SetVal("f_note", f.ColumnDescription, false);
-                    templateEngine.Parse($"list{i}", $"FieldList{i}", true);
+                    templateEngine.SetVal("f_type", ".number", false);
                 }
+                else
+                {
+                    templateEngine.SetVal("f_type", "", false);
+                }
+                templateEngine.SetVal("f_name", ColName, false);
+                templateEngine.SetVal("f_note", item.ColumnDescription, false);
+                templateEngine.Parse($"list1", $"FieldList1", true);
             }
+            string RowVerification = verification.ToString();
+            templateEngine.SetVal("p_verification", RowVerification.Remove(RowVerification.Length - 1, 1), false);
             templateEngine.Parse("out", "Tem", false);
             return templateEngine.PutOutPageCode("out");
+        }
+
+        /// <summary>
+        /// 拼装Form表单
+        /// </summary>
+        /// <param name="Propertys"></param>
+        /// <param name="FormData"></param>
+        /// <returns></returns>
+        public string GroupFormItem(List<modelProperty> Propertys, string FormData)
+        {
+            StringBuilder queryFormItem = new StringBuilder();
+            foreach (var item in Propertys)
+            {
+                var ColName = item.ColumnName.Substring(0, 1).ToLower() + item.ColumnName.Remove(0, 1);
+                if (item.ColumnType == typeof(DateTime).Name)
+                {
+                    queryFormItem.Append($"<el-form-item class='col-2' label='{item.ColumnDescription}' prop='{ColName}'><el-date-picker placeholder='{item.ColumnDescription}' v-model='{FormData}.{ColName}'></el-date-picker></el-form-item>\r\n");
+                }
+                else if (item.ColumnType == typeof(System.Enum).Name)
+                {
+                    string select = $"<el-form-item class='col-2' label='{item.ColumnDescription}' prop='{ColName}'><el-select placeholder='{item.ColumnDescription}'  v-model='{FormData}.{ColName}'>[item]</el-select></el-form-item>\r\n";
+                    var selectType = item.propertyInfo.PropertyType;
+                    var optionsFields = selectType.GetFields(BindingFlags.Static | BindingFlags.Public);
+                    StringBuilder options = new StringBuilder();
+                    foreach (var optionItem in optionsFields)
+                    {
+                        var label = optionItem.Name;
+                        var value = optionItem.GetRawConstantValue();
+                        options.Append($"<el-option label='{label}' :value='{value}'></el-option>");
+                    }
+                    queryFormItem.Append(select.Replace("[item]", options.ToString()));
+                }
+                else if (item.ColumnType == typeof(int).Name)
+                {
+                    queryFormItem.Append($"<el-form-item class='col-2' label='{item.ColumnDescription}' prop='{ColName}'><el-input placeholder='{item.ColumnDescription}' v-model.number='{FormData}.{ColName}'></el-input></el-form-item>\r\n");
+                }
+                else
+                {
+                    queryFormItem.Append($"<el-form-item class='col-2' label='{item.ColumnDescription}' prop='{ColName}'><el-input placeholder='{item.ColumnDescription}' v-model='{FormData}.{ColName}'></el-input></el-form-item>\r\n");
+                }
+            }
+            return queryFormItem.ToString();
         }
 
         /// <summary>
@@ -192,25 +250,31 @@ namespace Framework.Core.CodeTemplate
                     if (item.ColumnType == typeof(string).Name)
                     {
                         whereItem = @"           if (!string.IsNullOrEmpty({t_item}))
-                            {
-                                whereExpressionAll = whereExpressionAll.And(p => p.{t_item} == {t_item});
-                            }
+                {
+                    whereExpressionAll = whereExpressionAll.And(p => p.{t_item} == {t_item});
+                }
                         " + "\r\n";
                     }
-                    else if (item.ColumnType == typeof(int).Name)
+                    else if (item.ColumnType == typeof(int).Name || item.ColumnType == typeof(System.Enum).Name)
                     {
-                        whereItem = @"            if ({t_item} != 0)
-                                    {
-                                        whereExpressionAll = whereExpressionAll.And(p => p.{t_item} == {t_item});
-                                    }" + "\r\n";
-
+                        whereItem = @"            if ((int){t_item} != 0)
+                    {
+                        whereExpressionAll = whereExpressionAll.And(p => p.{t_item} == {t_item});
+                    }" + "\r\n";
                     }
                     else
                     {
                         whereItem = "          whereExpressionAll = whereExpressionAll.And(p => p.{t_item} == {t_item});" + "\r\n";
                     }
+                    if (item.ColumnType == typeof(System.Enum).Name)
+                    {
+                        parameter.Append($",{item.propertyInfo.PropertyType.Name}  {item.ColumnName}");
+                    }
+                    else
+                    {
+                        parameter.Append($",{item.ColumnType}  {item.ColumnName}");
+                    }
                     builder.Append(whereItem.Replace("{t_item}", item.ColumnName));
-                    parameter.Append($",{item.ColumnType}  {item.ColumnName}");
                 }
                 var parameterWhere = parameter.ToString() + ",";
                 templateEngine.SetVal("t_parameter", parameterWhere.Remove(0, 1), false);
@@ -345,14 +409,14 @@ namespace Framework.Core.CodeTemplate
         {
             var model = codeView.model;
             resultCode resultCode = new resultCode();
-
+            resultCode.VueCode += CreateVueCode(model.modelName, model.Description, codeView) + "\r\n";
             resultCode.controllerCode += CreateControllersCode(model.modelName, model.Description, codeView.Propertys) + "\r\n";
             resultCode.ModelCode +=  CreateModelCode(model.modelName, model.Description) + "\r\n";
             resultCode.IRepositoryCode += CreateIRepositoryCode(model.modelName, model.Description) + "\r\n";
             resultCode.IServicesCode += CreateIServicesCode(model.modelName, model.Description) + "\r\n";
             resultCode.ServicesCode += CreateServicesCode(model.modelName, model.Description) + "\r\n";
             resultCode.RepositoryCode += CreateRepositoryCode(model.modelName, model.Description) + "\r\n";
-            resultCode.VueCode +=  CreateVueCode(model.modelName, model.Description, codeView.Propertys) + "\r\n";
+           
             return resultCode;
         }
 
@@ -373,7 +437,7 @@ namespace Framework.Core.CodeTemplate
             var VueDirectoryPath = Path.Combine(templateConfig.VueOutputFile, $"{model.modelName}\\");
             if (!Directory.Exists(VueDirectoryPath)) Directory.CreateDirectory(VueDirectoryPath);
             var VuePath = Path.Combine(templateConfig.VueOutputFile, $@"{model.modelName}\{model.modelName}.vue");
-            var VueCode =  CreateVueCode(model.modelName, model.Description, codeView.Propertys);
+            var VueCode =  CreateVueCode(model.modelName, model.Description, codeView);
             if (!File.Exists(VuePath))
                 await File.WriteAllTextAsync(VuePath, VueCode);
 

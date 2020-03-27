@@ -108,6 +108,11 @@ namespace Framework.Core.Controllers
             return new MessageModel(await _powerGroupServices.DeleteByIds(Ids.ToArray()));
         }
 
+        /// <summary>
+        /// 保存角色权限
+        /// </summary>
+        /// <param name="powerRole"></param>
+        /// <returns></returns>
         [HttpPost("SaveRolePower")]
         public async Task<MessageModel> SaveRolePower(PowerRoleView powerRole)
         {

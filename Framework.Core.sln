@@ -17,6 +17,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Framework.Core.Services", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Framework.Core.Models", "Framework.Core.Models\Framework.Core.Models.csproj", "{F3BFFD4A-2953-4859-BC32-39874BBD845A}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Framework.QuartzConsole", "Framework.QuartzConsole\Framework.QuartzConsole.csproj", "{C44C6DB6-C3D7-41D5-A417-88085FEB8481}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Framework.ExecuteJobTask", "Framework.ExecuteJobTask\Framework.ExecuteJobTask.csproj", "{AED3279B-192F-4A01-82D5-D80C143E16B4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +55,14 @@ Global
 		{F3BFFD4A-2953-4859-BC32-39874BBD845A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F3BFFD4A-2953-4859-BC32-39874BBD845A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F3BFFD4A-2953-4859-BC32-39874BBD845A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C44C6DB6-C3D7-41D5-A417-88085FEB8481}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C44C6DB6-C3D7-41D5-A417-88085FEB8481}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C44C6DB6-C3D7-41D5-A417-88085FEB8481}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C44C6DB6-C3D7-41D5-A417-88085FEB8481}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AED3279B-192F-4A01-82D5-D80C143E16B4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AED3279B-192F-4A01-82D5-D80C143E16B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AED3279B-192F-4A01-82D5-D80C143E16B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AED3279B-192F-4A01-82D5-D80C143E16B4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

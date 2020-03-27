@@ -8,13 +8,17 @@
     <DocumentationFile>C:\Users\WU\source\repos\Framework.Core\Framework.Core\Framework.Core.xml</DocumentationFile>
     <NoWarn>1701;1702;1591</NoWarn>
   </PropertyGroup>
-
+  <ItemGroup>
+    <Protobuf Include="gRPC\Protos\QuartzServices.proto" GrpcClient="client" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Autofac" Version="5.1.2" />
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="6.0.0" />
     <PackageReference Include="Autofac.Extras.DynamicProxy" Version="5.0.0" />
     <PackageReference Include="AutoMapper" Version="9.0.0" />
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="7.0.0" />
+    <PackageReference Include="Grpc.AspNetCore.Server" Version="2.27.0" />
+    <PackageReference Include="Grpc.Core" Version="2.27.0" />
     <PackageReference Include="IdentityModel" Version="4.1.1" />
     <PackageReference Include="log4net" Version="2.0.8" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="3.1.2" />
@@ -27,12 +31,15 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="3.1.2" />
     <PackageReference Include="Microsoft.Extensions.Logging.Log4Net.AspNetCore" Version="3.0.3" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="3.1.1" />
+    <PackageReference Include="Quartz" Version="3.0.7" />
 
     <PackageReference Include="Swashbuckle.AspNetCore" Version="5.0.0" />
 
     <PackageReference Include="Swashbuckle.AspNetCore.Filters" Version="5.0.0" />
 
     <PackageReference Include="System.Text.Encoding.CodePages" Version="4.7.0" />
+
+    <PackageReference Include="Topshelf" Version="4.2.1" />
   </ItemGroup>
 
   <ItemGroup>

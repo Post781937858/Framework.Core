@@ -18,7 +18,7 @@ namespace Framework.Core.CodeTemplate
 
         Task OutTemplateCode(CodeView codeView);
 
-        List<modelInfo> GetModelInfos();
+        List<modelInfo> GetModelInfos(string modelName = "");
 
         List<modelProperty> GetProperty(string modelName);
 

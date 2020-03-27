@@ -9,6 +9,9 @@ using System.Threading.Tasks;
 
 namespace Framework.Core
 {
+    /// <summary>
+    ///  反射批量创建模型Map只需实现 IMapperTo 即可
+    /// </summary>
     public class AutoMapperProfile : Profile
     {
         public AutoMapperProfile()

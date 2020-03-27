@@ -31,19 +31,28 @@ namespace Framework.Core.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet]
-        public async Task<MessageModel<PageModel<BlogArticle>>> Query(String btitle, String bsubmitter, int Pageindex, int PageSize = 10)
+        public async Task<MessageModel<PageModel<BlogArticle>>> Query(String bsubmitter, String btitle, String bcategory, Int32 bcommentNum, int Pageindex, int PageSize = 10)
         {
             Expression<Func<BlogArticle, bool>> whereExpressionAll = r => true;
-            if (!string.IsNullOrEmpty(btitle))
-            {
-                whereExpressionAll = whereExpressionAll.And(p => p.btitle == btitle);
-            }
-
             if (!string.IsNullOrEmpty(bsubmitter))
             {
                 whereExpressionAll = whereExpressionAll.And(p => p.bsubmitter == bsubmitter);
             }
 
+            if (!string.IsNullOrEmpty(btitle))
+            {
+                whereExpressionAll = whereExpressionAll.And(p => p.btitle == btitle);
+            }
+
+            if (!string.IsNullOrEmpty(bcategory))
+            {
+                whereExpressionAll = whereExpressionAll.And(p => p.bcategory == bcategory);
+            }
+
+            if ((int)bcommentNum != 0)
+            {
+                whereExpressionAll = whereExpressionAll.And(p => p.bcommentNum == bcommentNum);
+            }
 
             var data = await _BlogArticleServices.QueryPage(whereExpressionAll, Pageindex, PageSize);
             return new MessageModel<PageModel<BlogArticle>>(data);

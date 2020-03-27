@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+option csharp_namespace = "Framework.QuartzConsole";
+
+package org.cooze.grpc.service;
+
+service QuartzServices {
+  rpc RunScheduleJob (ScheduleModel) returns (QuartzNetResult);
+
+  rpc StopScheduleJob (ScheduleModel) returns (QuartzNetResult);
+
+  rpc RemoveJob (ScheduleModel) returns (QuartzNetResult);
+
+  rpc StopScheduleAsync (ScheduleModel) returns (QuartzNetResult);
+}
+
+message ScheduleModel {
+  int32  JonId = 1;
+}
+
+message QuartzNetResult {
+  int32  Code = 1;
+  string Msg = 2;
+}
