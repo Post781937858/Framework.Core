@@ -47,17 +47,14 @@ namespace Framework.Core.Repository
         public async Task<List<MenuView>> GetMenuAllViews(Expression<Func<Menu, bool>> expression, Func<Menu, bool> expression1)
         {
             List<MenuView> menuViews = new List<MenuView>();
-            if (!string.IsNullOrEmpty(_user.Role))
+            var ListMenu = await base.Query(expression);
+            ListMenu.Where(expression1)
+            .ToList().ForEach(p =>
             {
-                var ListMenu = await base.Query(expression);
-                ListMenu.Where(expression1)
-                .ToList().ForEach(p =>
-                {
-                    MenuView item = mapper.Map<MenuView>(p);
-                    menuViews.Add(item);
-                });
-                GetSubmenuMenuApiView(ref menuViews, ListMenu);
-            }
+                MenuView item = mapper.Map<MenuView>(p);
+                menuViews.Add(item);
+            });
+            GetSubmenuMenuApiView(ref menuViews, ListMenu);
             return menuViews;
         }
 

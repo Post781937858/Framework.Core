@@ -156,13 +156,13 @@ namespace Framework.Core.CodeTemplate
                     item.propertyInfo = modelPropertys.FirstOrDefault(p => p.ColumnName.ToLower() == item.ColumnName.ToLower()).propertyInfo;
                 }
                 templateEngine.SetVal("b_queryparameter", queryparameter.ToString(), false);
-                templateEngine.SetVal("f_queryformitem", GroupFormItem(Propertys, "QueryForm"), false);
+                templateEngine.SetVal("f_queryformitem", GroupFormItem(Propertys, "QueryForm", false), false);
             }
             else
             {
                 templateEngine.SetVal("b_ queryparameter", "", false);
             }
-            var DlogForm = GroupFormItem(modelPropertys, "ruleForm");
+            var DlogForm = GroupFormItem(modelPropertys.Where(p => p.ColumnName != "RootEntity").ToList(), "ruleForm", true);
             templateEngine.SetVal("dlog_formItem", DlogForm, false);
             StringBuilder verification = new StringBuilder();
             foreach (var item in modelPropertys)
@@ -193,8 +193,9 @@ namespace Framework.Core.CodeTemplate
         /// </summary>
         /// <param name="Propertys"></param>
         /// <param name="FormData"></param>
+        /// <param name="IsQueryForm"></param>
         /// <returns></returns>
-        public string GroupFormItem(List<modelProperty> Propertys, string FormData)
+        public string GroupFormItem(List<modelProperty> Propertys, string FormData,bool IsQueryForm)
         {
             StringBuilder queryFormItem = new StringBuilder();
             foreach (var item in Propertys)
@@ -202,11 +203,11 @@ namespace Framework.Core.CodeTemplate
                 var ColName = item.ColumnName.Substring(0, 1).ToLower() + item.ColumnName.Remove(0, 1);
                 if (item.ColumnType == typeof(DateTime).Name)
                 {
-                    queryFormItem.Append($"<el-form-item class='col-2' label='{item.ColumnDescription}' prop='{ColName}'><el-date-picker placeholder='{item.ColumnDescription}' v-model='{FormData}.{ColName}'></el-date-picker></el-form-item>\r\n");
+                    queryFormItem.Append($"<el-form-item {(IsQueryForm ? "class='col-2'" : "")}  label='{item.ColumnDescription}' prop='{ColName}'><el-date-picker placeholder='{item.ColumnDescription}' v-model='{FormData}.{ColName}'></el-date-picker></el-form-item>\r\n");
                 }
                 else if (item.ColumnType == typeof(System.Enum).Name)
                 {
-                    string select = $"<el-form-item class='col-2' label='{item.ColumnDescription}' prop='{ColName}'><el-select placeholder='{item.ColumnDescription}'  v-model='{FormData}.{ColName}'>[item]</el-select></el-form-item>\r\n";
+                    string select = $"<el-form-item {(IsQueryForm ? "class='col-2'" : "")} label='{item.ColumnDescription}' prop='{ColName}'><el-select placeholder='{item.ColumnDescription}'  v-model='{FormData}.{ColName}'>[item]</el-select></el-form-item>\r\n";
                     var selectType = item.propertyInfo.PropertyType;
                     var optionsFields = selectType.GetFields(BindingFlags.Static | BindingFlags.Public);
                     StringBuilder options = new StringBuilder();
@@ -220,11 +221,11 @@ namespace Framework.Core.CodeTemplate
                 }
                 else if (item.ColumnType == typeof(int).Name)
                 {
-                    queryFormItem.Append($"<el-form-item class='col-2' label='{item.ColumnDescription}' prop='{ColName}'><el-input placeholder='{item.ColumnDescription}' v-model.number='{FormData}.{ColName}'></el-input></el-form-item>\r\n");
+                    queryFormItem.Append($"<el-form-item {(IsQueryForm ? "class='col-2'" : "")} label='{item.ColumnDescription}' prop='{ColName}'><el-input placeholder='{item.ColumnDescription}' v-model.number='{FormData}.{ColName}'></el-input></el-form-item>\r\n");
                 }
                 else
                 {
-                    queryFormItem.Append($"<el-form-item class='col-2' label='{item.ColumnDescription}' prop='{ColName}'><el-input placeholder='{item.ColumnDescription}' v-model='{FormData}.{ColName}'></el-input></el-form-item>\r\n");
+                    queryFormItem.Append($"<el-form-item {(IsQueryForm ? "class='col-2'" : "")} label='{item.ColumnDescription}' prop='{ColName}'><el-input placeholder='{item.ColumnDescription}' v-model='{FormData}.{ColName}'></el-input></el-form-item>\r\n");
                 }
             }
             return queryFormItem.ToString();

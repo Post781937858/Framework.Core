@@ -413,7 +413,6 @@ namespace Framework.QuartzConsole
                     Code = 200,
                     Msg = "任务调度停止成功"
                 };
-                await Console.Out.WriteLineAsync("任务调度停止！");
             }
             catch (Exception ex)
             {

@@ -33,6 +33,7 @@ namespace Framework.Core.Controllers
         [HttpGet]
         public async Task<MessageModel<PageModel<BlogArticle>>> Query(String bsubmitter, String btitle, String bcategory, Int32 bcommentNum, int Pageindex, int PageSize = 10)
         {
+            throw new Exception("444");
             Expression<Func<BlogArticle, bool>> whereExpressionAll = r => true;
             if (!string.IsNullOrEmpty(bsubmitter))
             {

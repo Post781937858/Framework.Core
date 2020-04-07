@@ -10,6 +10,8 @@ using Autofac.Extras.DynamicProxy;
 using Framework.Core.CodeTemplate;
 using Framework.Core.Common;
 using Framework.Core.Extensions;
+using Framework.Core.Filter;
+using Framework.Core.Middlewares;
 using Framework.Core.Models.ViewModels;
 using Grpc.Core;
 using Microsoft.AspNetCore.Authentication;
@@ -149,12 +151,18 @@ namespace Framework.Core
                 //// 配置apixml名称
                 option.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, $"{typeof(Startup).Assembly.GetName().Name}.xml"), true);
             });
-            DBStartup.SeedAsync().Wait();
+
+            services.AddControllers(o =>
+            {
+                // 全局异常过滤
+                o.Filters.Add(typeof(GlobalExceptionsFilter));
+            });
             //去除Json序列化DateTime类型 T字符
             services.AddControllers().AddJsonOptions(configure =>
             {
                 configure.JsonSerializerOptions.Converters.Add(new DatetimeJsonConverter());
             });
+            //DBStartup.SeedAsync().Wait();
         }
 
 
@@ -173,6 +181,7 @@ namespace Framework.Core
             cacheType.Add(typeof(FrameworkTranAOP));
             #endregion
 
+
             #region 注入Repository
 
             var repositoryDllFile = Path.Combine(basePath, "Framework.Core.Repository.dll");
@@ -180,6 +189,7 @@ namespace Framework.Core
             builder.RegisterAssemblyTypes(assemblysRepository).AsImplementedInterfaces();
 
             #endregion
+
 
             #region 注入Services
 
@@ -201,13 +211,13 @@ namespace Framework.Core
                 app.UseDeveloperExceptionPage();
             }
 
-
             //app.UseHttpsRedirection();
 
             app.UseCors(builder => builder.WithOrigins(Appsettings.app(new string[] { "Startup", "Cors", "IPs" }).Split(','))
             .AllowAnyHeader()
             .AllowAnyMethod()); //跨域
 
+            app.UseMiddlewareAll();
             app.UseSwagger();
             app.UseSwaggerUI(option =>
             {

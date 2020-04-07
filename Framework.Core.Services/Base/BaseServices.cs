@@ -1,4 +1,5 @@
-﻿using Framework.Core.IRepository.IUnitOfWork.IBase;
+﻿using Framework.Core.Common;
+using Framework.Core.IRepository.IUnitOfWork.IBase;
 using Framework.Core.IServices.IBase;
 using Framework.Core.Models;
 using System;

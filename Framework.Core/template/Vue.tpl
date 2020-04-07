@@ -75,7 +75,7 @@ export default {
       QueryForm: {{b_queryparameter}},
       dialogVisible: false, // dialog显示
       rules: { // 表单验证
-	   {p_verification}
+{p_verification}
       },
       ruleForm: {}, // 表单模型
       Isedit: false, // 是否编辑

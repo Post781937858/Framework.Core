@@ -104,7 +104,7 @@ namespace Framework.Core
         private async Task TestActionAsync(IInvocation invocation)
         {
             //Console.WriteLine("Waiting after method execution for " + invocation.MethodInvocationTarget.Name);
-            await Task.Delay(20); // 仅作测试
+            await Task.Delay(0); // 仅作测试
             //Console.WriteLine("Waited after method execution for " + invocation.MethodInvocationTarget.Name);
         }
 

@@ -61,6 +61,13 @@ namespace Framework.Core.Controllers
             return new MessageModel<PageModel<User>>(data);
         }
 
+        [Authorize]
+        [HttpGet("ChangePassword")]
+        public async Task<MessageModel> ChangePassword()
+        {
+            return null;
+        }
+
         /// <summary>
         /// 获取用户信息
         /// </summary>
