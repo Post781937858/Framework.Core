@@ -31,7 +31,7 @@ namespace Framework.Core.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet]
-        public async Task<MessageModel<PageModel<line_check>>> Query(String box_id, String wms_id, String area_code, Int32 size, tasksstate state, String messageName, String location, Int32 weight, sendstate sendSwitch, String source_code, int Pageindex, int PageSize = 10)
+        public async Task<MessageModel<PageModel<line_check>>> Query(string box_id, string wms_id, string area_code, int size, tasksstate state, string messageName, string location, int weight, sendstate sendSwitch, string source_code, int Pageindex, int PageSize = 10)
         {
             Expression<Func<line_check, bool>> whereExpressionAll = r => true;
             if (!string.IsNullOrEmpty(box_id))

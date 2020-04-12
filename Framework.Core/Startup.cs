@@ -9,6 +9,7 @@ using Autofac;
 using Autofac.Extras.DynamicProxy;
 using Framework.Core.CodeTemplate;
 using Framework.Core.Common;
+using Framework.Core.Common.Hubs;
 using Framework.Core.Extensions;
 using Framework.Core.Filter;
 using Framework.Core.Middlewares;
@@ -64,6 +65,7 @@ namespace Framework.Core
                 Channel _channel = new Channel(Appsettings.app(new string[] { "AppSettings", "gRPCClient", "ConnectionString" }), ChannelCredentials.Insecure);
                 return new QuartzServicesClient(_channel);
             });
+            services.AddSignalR();
             services.AddScoped<ICodeContext, CodeContext>();
             services.AddAutoMapperSetup();
             var jwtSetting = ServerJwtSetting.GetJwtSetting();
@@ -155,7 +157,7 @@ namespace Framework.Core
             services.AddControllers(o =>
             {
                 // 全局异常过滤
-                o.Filters.Add(typeof(GlobalExceptionsFilter));
+                //o.Filters.Add(typeof(GlobalExceptionsFilter));
             });
             //去除Json序列化DateTime类型 T字符
             services.AddControllers().AddJsonOptions(configure =>
@@ -247,6 +249,7 @@ namespace Framework.Core
             {
                 //endpoints.MapGrpcService<MsgServiceImpl>();
                 endpoints.MapControllers();
+                endpoints.MapHub<ChatHub>("/api2/chatHub");
             });
         }
     }

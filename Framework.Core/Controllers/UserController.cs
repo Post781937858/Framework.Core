@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Framework.Core.Common;
 using Framework.Core.IServices;
 using Framework.Core.Models;
+using Framework.Core.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -61,11 +62,26 @@ namespace Framework.Core.Controllers
             return new MessageModel<PageModel<User>>(data);
         }
 
+        /// <summary>
+        ///更新密码
+        /// </summary>
+        /// <returns></returns>
         [Authorize]
-        [HttpGet("ChangePassword")]
-        public async Task<MessageModel> ChangePassword()
+        [HttpPost("ChangePassword")]
+        public async Task<MessageModel> ChangePassword(ChangePasswordView passwordView)
         {
-            return null;
+            User useritem = await userServices.QueryById(user.ID);
+            string md5Password = MD5Helper.MD5Encrypt32(passwordView.originalPassword);
+            if (useritem != null && useritem.Password == md5Password)
+            {
+                useritem.Password = MD5Helper.MD5Encrypt32(passwordView.checkPassword);
+                await userServices.Update(useritem);
+                return new MessageModel();
+            }
+            else
+            {
+                return new MessageModel(false, "原密码错误");
+            }
         }
 
         /// <summary>

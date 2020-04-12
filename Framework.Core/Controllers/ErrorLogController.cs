@@ -42,7 +42,8 @@ namespace Framework.Core.Controllers
             {
                 whereExpressionAll = whereExpressionAll.And(p => p.errormsg == errormsg);
             }
-            var data = await _ErrorLogServices.QueryPage(whereExpressionAll, Pageindex, PageSize);
+            var data = await _ErrorLogServices.QueryPage(whereExpressionAll, Pageindex, PageSize, "time desc");
+            data.data.ForEach(p => { p.errorstack = ""; });
             return new MessageModel<PageModel<ErrorLog>>(data);
         }
 

@@ -37,8 +37,6 @@ namespace Framework.Core.Filter
             }
             context.Result = new InternalServerErrorObjectResult(json);
 
-
-
             ////采用log4net 进行错误日志记录
             //log.Error(json.Message + WriteLog(json.Message, context.Exception));
 

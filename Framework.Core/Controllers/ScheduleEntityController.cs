@@ -109,7 +109,7 @@ namespace Framework.Core.Controllers
                 model.RunStatus = JobRunStatus.stop;
                 await _ScheduleEntityServices.Update(model);
             }
-            return new MessageModel(result.Code == 200,result.Msg);
+            return new MessageModel(result.Code == 200, result.Msg);
         }
 
         /// <summary>

@@ -14,6 +14,15 @@ namespace Framework.Core.Repository.UnitOfWork
         public UnitOfWork(ISqlSugarClient sqlSugarClient)
         {
             _sqlSugarClient = sqlSugarClient;
+            _sqlSugarClient.Aop.OnLogExecuting = (sql, pars) => //SQL执行中事件
+            {
+                Parallel.For(0, 1, e =>
+                {
+                    //MiniProfiler.Current.CustomTiming("SQL：", GetParas(pars) + "【SQL语句】：" + sql);
+                    //LogLock.OutSql2Log("SqlLog", new string[] { GetParas(pars), "【SQL语句】：" + sql });
+
+                });
+            };
         }
 
         /// <summary>

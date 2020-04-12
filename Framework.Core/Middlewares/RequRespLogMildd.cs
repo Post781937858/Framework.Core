@@ -9,6 +9,10 @@ using System.IO;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using Framework.Core.Common;
+using System.Diagnostics;
+using Framework.Core.IServices;
+using Framework.Core.Models;
+using System.Net;
 
 namespace Framework.Core.Middlewares
 {
@@ -18,35 +22,38 @@ namespace Framework.Core.Middlewares
     /// </summary>
     public class RequRespLogMildd
     {
-        /// <summary>
-        /// 
-        /// </summary>
         private readonly RequestDelegate _next;
+        private readonly IApiRequestLogServices requestLogServices;
+        private readonly IUser user;
+
         /// <summary>
         /// 
         /// </summary>
         /// <param name="next"></param>
-        public RequRespLogMildd(RequestDelegate next)
+        public RequRespLogMildd(RequestDelegate next, IApiRequestLogServices requestLogServices, IUser user)
         {
             _next = next;
+            this.requestLogServices = requestLogServices;
+            this.user = user;
         }
-
-
 
         public async Task InvokeAsync(HttpContext context)
         {
             if (Appsettings.app("Middleware", "RequestResponseLog", "Enabled").ToBool())
             {
                 // 过滤，只有接口
-                if (context.Request.Path.Value.Contains("api"))
+                if (context.Request.Path.Value.Contains("api") && !context.Request.QueryString.ToString().Contains("Page"))
                 {
+                    Stopwatch stopwatch = new Stopwatch();
+                    stopwatch.Start();
                     context.Request.EnableBuffering();
                     Stream originalBody = context.Response.Body;
-
+                    string Path = context.Request.Path + context.Request.QueryString;
+                    string DataRequest = string.Empty;
+                    string DataResponse = string.Empty;
                     try
                     {
-                        // 存储请求数据
-                        await RequestDataLog(context);
+                        DataRequest = await RequestData(context);
 
                         using (var ms = new MemoryStream())
                         {
@@ -54,8 +61,7 @@ namespace Framework.Core.Middlewares
 
                             await _next(context);
 
-                            // 存储响应数据
-                            ResponseDataLog(context.Response, ms);
+                            DataResponse = ResponseData(context.Response, ms);
 
                             ms.Position = 0;
                             await ms.CopyToAsync(originalBody);
@@ -63,13 +69,29 @@ namespace Framework.Core.Middlewares
                     }
                     catch (Exception)
                     {
-                        // 记录异常
-                        //ErrorLogData(context.Response, ex);
+
                     }
                     finally
                     {
                         context.Response.Body = originalBody;
                     }
+                    stopwatch.Stop();
+                    Parallel.For(0, 1, s =>
+                    {
+                        ApiRequestLog requestLog = new ApiRequestLog()
+                        {
+                            userName = user.Name,
+                            consumingTime = stopwatch.ElapsedMilliseconds,
+                            method= context.Request.Method.ToLower(),
+                            FormDataparameter = DataRequest,
+                            path = context.Request.Path,
+                            Urlparameter = context.Request.QueryString.ToString(),
+                            ResponseData = DataResponse,
+                            state = context.Response.StatusCode == StatusCodes.Status200OK ? Requeststate.succeed : Requeststate.error,
+                            requestTime = DateTime.Now
+                        };
+                        requestLogServices.Add(requestLog);
+                    });
                 }
                 else
                 {
@@ -82,26 +104,17 @@ namespace Framework.Core.Middlewares
             }
         }
 
-        private async Task RequestDataLog(HttpContext context)
+        private async Task<string> RequestData(HttpContext context)
         {
             var request = context.Request;
             var sr = new StreamReader(request.Body);
 
-            var content = $" QueryData:{request.Path + request.QueryString}\r\n BodyData:{await sr.ReadToEndAsync()}";
-
-            if (!string.IsNullOrEmpty(content))
-            {
-                Parallel.For(0, 1, e =>
-                {
-                    //LogLock.OutSql2Log("RequestResponseLog", new string[] { "Request Data:", content });
-
-                });
-
-                request.Body.Position = 0;
-            }
+            var content = await sr.ReadToEndAsync();
+            request.Body.Position = 0;
+            return content;
         }
 
-        private void ResponseDataLog(HttpResponse response, MemoryStream ms)
+        private string ResponseData(HttpResponse response, MemoryStream ms)
         {
             ms.Position = 0;
             var ResponseBody = new StreamReader(ms).ReadToEnd();
@@ -110,14 +123,7 @@ namespace Framework.Core.Middlewares
             var reg = "<[^>]+>";
             var isHtml = Regex.IsMatch(ResponseBody, reg);
 
-            if (!string.IsNullOrEmpty(ResponseBody))
-            {
-                Parallel.For(0, 1, e =>
-                {
-                    //LogLock.OutSql2Log("RequestResponseLog", new string[] { "Response Data:", ResponseBody });
-
-                });
-            }
+            return ResponseBody;
         }
     }
 }

@@ -86,11 +86,11 @@ namespace Framework.Core
             if (typeof(Task).IsAssignableFrom(type))
             {
                 var resultProperty = type.GetProperty("Result");
-                dataIntercept += ($"【执行完成结果】：{JsonConvert.SerializeObject(resultProperty.GetValue(invocation.ReturnValue))}");
+                //dataIntercept += ($"【执行完成结果】：{JsonConvert.SerializeObject(resultProperty.GetValue(invocation.ReturnValue))}");
             }
             else
             {
-                dataIntercept += ($"【执行完成结果】：{invocation.ReturnValue}");
+                //dataIntercept += ($"【执行完成结果】：{invocation.ReturnValue}");
             }
             Parallel.For(0, 1, e =>
             {

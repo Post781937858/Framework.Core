@@ -41,7 +41,7 @@ namespace Framework.Core.Models
         /// <summary>
         /// 堆栈
         /// </summary>
-        [SugarColumn(Length = 255, IsNullable = true, ColumnDataType = "nvarchar", ColumnDescription = "堆栈")]
+        [SugarColumn(Length = 5000, IsNullable = true, ColumnDataType = "nvarchar", ColumnDescription = "堆栈")]
         public string errorstack { get; set; }
     }
 }

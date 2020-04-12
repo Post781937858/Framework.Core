@@ -145,7 +145,9 @@ namespace Framework.Core.Models
     {
         all = 99,
         awaits = 0,
-        achieve = 1
+        Aachieve = 1,
+        Bachieve = 2,
+        Fachieve = 3
     }
 
     public enum weightSend
