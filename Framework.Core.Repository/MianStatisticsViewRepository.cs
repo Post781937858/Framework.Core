@@ -20,13 +20,13 @@ namespace Framework.Core.Repository
 
         public async Task<List<InforesultView>> GetStatisticsViewAsync(string area_code,int DataCount)
         {
-            var result = await base.Db.SqlQueryable<InforesultView>($"select DATE_FORMAT(create_time,'%Y-%m-%d') as time,Count(*) as count  from `line_check`   where  area_code='{area_code}' AND messageName!='packetPass' AND DATE_SUB(CURDATE(), INTERVAL {DataCount} DAY) <= date(create_time) GROUP BY time").ToListAsync();
+            var result = await base.Db.SqlQueryable<InforesultView>($"select DATE_FORMAT(create_time,'%Y-%m-%d') as time,Count(id) as count  from `line_check`   where  area_code='{area_code}' AND messageName!='packetPass' AND DATE_SUB(CURDATE(), INTERVAL {DataCount} DAY) <= date(create_time) GROUP BY time").ToListAsync();
             return result;
         }
 
         public async Task<InforesultView> GetTodayOrderCountAsync(string area_code)
         {
-            var result = await base.Db.SqlQueryable<InforesultView>($"select DATE_FORMAT(create_time,'%Y-%m-%d') as time,count(*) count  from `line_check`   where  area_code='{area_code}' AND messageName!='packetPass' AND DATE_FORMAT(create_time,'%Y-%m-%d')='{DateTime.Now.ToString("yyyy-MM-dd")}' GROUP BY time").FirstAsync();
+            var result = await base.Db.SqlQueryable<InforesultView>($"select DATE_FORMAT(create_time,'%Y-%m-%d') as time,count(id) count  from `line_check`   where  area_code='{area_code}' AND messageName!='packetPass' AND DATE_FORMAT(create_time,'%Y-%m-%d')='{DateTime.Now.ToString("yyyy-MM-dd")}' GROUP BY time").FirstAsync();
             return result;
         }
 
