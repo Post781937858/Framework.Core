@@ -11,8 +11,10 @@ using Framework.Core.CodeTemplate;
 using Framework.Core.Common;
 using Framework.Core.Common.Hubs;
 using Framework.Core.Extensions;
+using Framework.Core.Extensions.Quartz;
 using Framework.Core.Filter;
 using Framework.Core.Middlewares;
+using Framework.Core.Middlewares.webSocket;
 using Framework.Core.Models.ViewModels;
 using Grpc.Core;
 using Microsoft.AspNetCore.Authentication;
@@ -68,6 +70,8 @@ namespace Framework.Core
             services.AddSignalR();
             services.AddScoped<ICodeContext, CodeContext>();
             services.AddAutoMapperSetup();
+            services.AddWebSocketManager();
+            services.AddQuartzManager();
             var jwtSetting = ServerJwtSetting.GetJwtSetting();
 
             // 角色与接口的权限要求参数
@@ -206,7 +210,7 @@ namespace Framework.Core
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, WebSocketHandlerCore webSocketHandlerCode)
         {
             if (env.IsDevelopment())
             {
@@ -244,7 +248,14 @@ namespace Framework.Core
             app.UseAuthentication();
             // 然后是授权中间件
             app.UseAuthorization();
-
+            app.QuartzManager();
+            var webSocketOptions = new WebSocketOptions()
+            {
+                KeepAliveInterval = TimeSpan.FromSeconds(20),
+                ReceiveBufferSize = 4 * 1024
+            };
+            app.UseWebSockets(webSocketOptions);
+            app.MapWebSocketManager("/ws", webSocketHandlerCode);
             app.UseEndpoints(endpoints =>
             {
                 //endpoints.MapGrpcService<MsgServiceImpl>();

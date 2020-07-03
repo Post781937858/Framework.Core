@@ -1,4 +1,5 @@
-﻿using Framework.Core.Models;
+﻿using Framework.Core.Common;
+using Framework.Core.Models;
 using IdentityModel;
 using SqlSugar;
 using System;
@@ -43,26 +44,22 @@ namespace Framework.Core
         /// <returns></returns>
         public static TokenModelJwt SerializeJwt(string jwtStr)
         {
-            var jwtHandler = new JwtSecurityTokenHandler();
-            JwtSecurityToken jwtToken = jwtHandler.ReadJwtToken(jwtStr);
-            object role;
-            object name;
+            TokenModelJwt tm = new TokenModelJwt();
             try
             {
-                jwtToken.Payload.TryGetValue(ClaimTypes.Role, out role);
-                jwtToken.Payload.TryGetValue(ClaimTypes.Name, out name);
+                var jwtHandler = new JwtSecurityTokenHandler();
+                JwtSecurityToken jwtToken = jwtHandler.ReadJwtToken(jwtStr);
+                object role;
+                object name;
+                object Id;
+                jwtToken.Payload.TryGetValue(JwtClaimTypes.Id, out Id);
+                jwtToken.Payload.TryGetValue(JwtClaimTypes.Role, out role);
+                jwtToken.Payload.TryGetValue(JwtClaimTypes.Name, out name);
+                tm.Uid = Id.ToInt();
+                tm.Name = name.ObjToString();
+                tm.Role = role != null ? role.ObjToString() : "";
             }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
-            }
-            var tm = new TokenModelJwt
-            {
-                Uid = (jwtToken.Id).ObjToInt(),
-                Name= name.ObjToString(),
-                Role = role != null ? role.ObjToString() : "",
-            };
+            catch (Exception) { }
             return tm;
         }
     }

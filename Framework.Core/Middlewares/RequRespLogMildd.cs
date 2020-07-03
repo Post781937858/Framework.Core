@@ -78,19 +78,19 @@ namespace Framework.Core.Middlewares
                     stopwatch.Stop();
                     Parallel.For(0, 1, s =>
                     {
-                        ApiRequestLog requestLog = new ApiRequestLog()
-                        {
-                            userName = user.Name,
-                            consumingTime = stopwatch.ElapsedMilliseconds,
-                            method= context.Request.Method.ToLower(),
-                            FormDataparameter = DataRequest,
-                            path = context.Request.Path,
-                            Urlparameter = context.Request.QueryString.ToString(),
-                            ResponseData = DataResponse,
-                            state = context.Response.StatusCode == StatusCodes.Status200OK ? Requeststate.succeed : Requeststate.error,
-                            requestTime = DateTime.Now
-                        };
-                        requestLogServices.Add(requestLog);
+                        //ApiRequestLog requestLog = new ApiRequestLog()
+                        //{
+                        //    userName = user.Name,
+                        //    consumingTime = stopwatch.ElapsedMilliseconds,
+                        //    method= context.Request.Method.ToLower(),
+                        //    FormDataparameter = DataRequest,
+                        //    path = context.Request.Path,
+                        //    Urlparameter = context.Request.QueryString.ToString(),
+                        //    ResponseData = DataResponse,
+                        //    state = context.Response.StatusCode == StatusCodes.Status200OK ? Requeststate.succeed : Requeststate.error,
+                        //    requestTime = DateTime.Now
+                        //};
+                        //requestLogServices.Add(requestLog);
                     });
                 }
                 else
